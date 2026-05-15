@@ -1,0 +1,183 @@
+<div class="dashboard-page page-shell page-enter">
+  <section class="dashboard-greeting page-shell__hero">
+    <div class="page-shell__copy">
+      <span class="page-shell__eyebrow">Workspace Overview</span>
+      <h1>Hey, {{ currentUser?.fullName }}!</h1>
+      <p>Welcome back. Your current plan is {{ planLabel }}.</p>
+    </div>
+    <div class="header-actions page-shell__actions">
+      <button mat-flat-button class="btn btn-primary" (click)="tryCreateWorkspace()" [disabled]="!canCreate">
+        <mat-icon>add</mat-icon>
+        New Workspace
+      </button>
+    </div>
+  </section>
+
+  <section class="stats-row stagger-children">
+    <article class="stat-card">
+      <div class="stat-card__icon">
+        <mat-icon>workspaces</mat-icon>
+      </div>
+      <div class="stat-card__value">{{ workspaces.length }}</div>
+      <p class="stat-card__label">Total workspaces</p>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-card__icon stat-card__icon--soft">
+        <mat-icon>workspace_premium</mat-icon>
+      </div>
+      <div class="stat-card__value stat-card__value--small">{{ planName }}</div>
+      <p class="stat-card__label">Current plan</p>
+    </article>
+
+    <article class="stat-card">
+      <div class="stat-card__icon stat-card__icon--soft">
+        <mat-icon>person_add</mat-icon>
+      </div>
+      <div class="stat-card__value">{{ canCreate ? 'Yes' : 'No' }}</div>
+      <p class="stat-card__label">Can create workspace</p>
+    </article>
+
+    <article class="stat-card stat-card--danger">
+      <div class="stat-card__icon stat-card__icon--soft">
+        <mat-icon>rule</mat-icon>
+      </div>
+      <div class="stat-card__value">{{ isPaidUser ? '∞' : '3' }}</div>
+      <p class="stat-card__label">Workspace allowance</p>
+    </article>
+  </section>
+
+  <div *ngIf="showLimitBanner" class="limit-banner">
+    <mat-icon>workspace_premium</mat-icon>
+    <div class="limit-banner__copy">
+      <p class="limit-banner__title">Workspace limit reached</p>
+      <p>Free plan allows 3 workspaces. Upgrade to Pro for unlimited spaces.</p>
+    </div>
+    <a routerLink="/pricing" class="btn btn-primary btn-sm">Upgrade to Pro</a>
+  </div>
+
+  <section *ngIf="showCreateForm" class="card create-form-card page-surface">
+    <div class="create-form-card__header">
+      <div>
+        <h3>New Workspace</h3>
+        <p>Set up a focused space for your next project.</p>
+      </div>
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="createWorkspace()" class="field-stack">
+      <div class="create-form-grid">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <mat-form-field appearance="outline">
+            <input matInput formControlName="name" placeholder="Engineering Team" />
+            <mat-error *ngIf="name.hasError('required')">Name is required</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <mat-form-field appearance="outline">
+            <mat-select formControlName="visibility">
+              <mat-option value="PRIVATE">Private</mat-option>
+              <mat-option value="PUBLIC">Public</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <mat-form-field appearance="outline">
+          <textarea matInput formControlName="description" rows="2" placeholder="Add a short description"></textarea>
+        </mat-form-field>
+      </div>
+
+      <div class="create-form-actions">
+        <button mat-button type="button" class="btn btn-ghost" (click)="showCreateForm = false">Cancel</button>
+        <button mat-flat-button type="submit" class="btn btn-primary" [disabled]="creating || createForm.invalid">
+          {{ creating ? 'Creating...' : 'Create Workspace' }}
+        </button>
+      </div>
+    </form>
+  </section>
+
+    <div *ngIf="loading" class="loading-stack">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Loading workspaces...</p>
+  </div>
+
+    <div *ngIf="!loading && workspaces.length === 0" class="empty-state-panel">
+    <mat-icon>space_dashboard</mat-icon>
+    <h3>No workspaces yet</h3>
+    <p>Create your first workspace to start managing projects with your team.</p>
+    <button mat-flat-button class="btn btn-primary" (click)="tryCreateWorkspace()">Create Workspace</button>
+  </div>
+
+  <section *ngIf="!loading && workspaces.length > 0" class="workspace-section">
+    <div class="workspace-section__header page-section-heading">
+      <div>
+        <h2>Your Workspaces</h2>
+        <p>Open a shared space, jump into a board, or start something new.</p>
+      </div>
+    </div>
+
+    <div class="workspace-grid stagger-children">
+      <article *ngFor="let ws of workspaces" class="workspace-card card card-hover" (click)="openWorkspace(ws.id)">
+        <div class="workspace-card__accent" [style.background]="getWorkspaceColor(ws.id) || 'hsl(' + (ws.id * 47 % 360) + ',60%,50%)'"></div>
+
+        <div class="workspace-card__top">
+          <div
+            class="avatar avatar-md workspace-card__avatar"
+            [style.background]="getWorkspaceColor(ws.id) || 'hsl(' + (ws.id * 47 % 360) + ',60%,50%)'"
+          >
+            {{ getInitials(ws.name) }}
+          </div>
+
+          <div class="workspace-card__headings">
+            <h3>{{ ws.name }}</h3>
+            <span class="badge" [ngClass]="ws.visibility === 'PUBLIC' ? 'badge-public' : 'badge-private'">
+              <mat-icon>{{ ws.visibility === 'PUBLIC' ? 'public' : 'lock' }}</mat-icon>
+              {{ ws.visibility | titlecase }}
+            </span>
+          </div>
+
+          <div class="workspace-card__actions">
+            <app-color-picker [selectedColor]="getWorkspaceColor(ws.id)" (colorChange)="setWorkspaceColor(ws.id, $event)"></app-color-picker>
+            <button mat-icon-button class="workspace-card__menu" [matMenuTriggerFor]="wsMenu" (click)="$event.stopPropagation()">
+              <mat-icon>more_horiz</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <p class="workspace-card__description">{{ ws.description || 'No description yet.' }}</p>
+
+        <div class="workspace-card__members">
+          <div
+            *ngFor="let member of ws.members | slice:0:4; let i = index"
+            class="avatar avatar-xs workspace-card__member"
+            [class.workspace-card__member--offset]="i > 0"
+          >
+            {{ (member.user?.fullName || 'U').slice(0, 1).toUpperCase() }}
+          </div>
+          <span *ngIf="ws.members.length > 4" class="workspace-card__member-count">+{{ ws.members.length - 4 }}</span>
+        </div>
+
+        <div class="workspace-card__footer">
+          <span>{{ ws.members.length || 0 }} members</span>
+          <button mat-button class="btn btn-secondary btn-sm">Open</button>
+        </div>
+
+        <mat-menu #wsMenu="matMenu">
+          <button mat-menu-item (click)="openWorkspace(ws.id)">
+            <mat-icon>open_in_new</mat-icon>
+            Open
+          </button>
+          <button mat-menu-item (click)="deleteWorkspace(ws.id, $event)">
+            <mat-icon>delete</mat-icon>
+            Delete
+          </button>
+        </mat-menu>
+      </article>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,54 @@
+server:
+  port: 8088
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  application:
+    name: payment-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/flowboard_payment
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET}
+  prices:
+    pro:
+      monthly: ${STRIPE_PRICE_PRO_MONTHLY}
+      yearly: ${STRIPE_PRICE_PRO_YEARLY}
+    business:
+      monthly: ${STRIPE_PRICE_BUSINESS_MONTHLY}
+      yearly: ${STRIPE_PRICE_BUSINESS_YEARLY}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never

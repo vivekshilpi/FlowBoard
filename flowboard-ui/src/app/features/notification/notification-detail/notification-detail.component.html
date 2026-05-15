@@ -1,0 +1,52 @@
+<section class="notification-detail-page">
+  <button mat-button class="back-link" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Back to notifications
+  </button>
+
+  <mat-card class="notification-detail-card">
+    <ng-container *ngIf="loading">
+      <div class="loading-state">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p>Loading notification...</p>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && notification as item">
+      <div class="notification-detail-hero">
+        <div class="notification-detail-badge">
+          <mat-icon>{{ getTypeIcon(item.type) }}</mat-icon>
+          <span>{{ getCategoryLabel(item.type) }}</span>
+        </div>
+
+        <h1>{{ item.title }}</h1>
+        <p class="notification-detail-message">{{ item.message }}</p>
+      </div>
+
+      <div class="notification-detail-grid">
+        <div class="detail-row">
+          <span class="label">Status</span>
+          <span>{{ item.isRead ? 'Read' : 'Unread' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Created</span>
+          <span>{{ item.createdAt | date:'medium' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="item.readAt">
+          <span class="label">Read</span>
+          <span>{{ item.readAt | date:'medium' }}</span>
+        </div>
+        <div class="detail-row" *ngIf="item.relatedType">
+          <span class="label">Related</span>
+          <span>{{ item.relatedType }}</span>
+        </div>
+      </div>
+
+      <div class="actions" *ngIf="item.deepLinkUrl">
+        <button mat-flat-button color="primary" (click)="openRelated()">
+          {{ getPrimaryActionLabel(item) }}
+        </button>
+      </div>
+    </ng-container>
+  </mat-card>
+</section>

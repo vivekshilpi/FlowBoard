@@ -1,0 +1,170 @@
+<div class="landing-page">
+  <nav class="landing-nav" [class.scrolled]="scrolled">
+    <div class="landing-nav__inner">
+      <a class="landing-brand" [routerLink]="['/']">
+        <span class="landing-brand__mark">FB</span>
+        <span class="landing-brand__name">FlowBoard</span>
+      </a>
+
+      <div class="landing-nav__links">
+        <a [routerLink]="['/']">Home</a>
+        <a [routerLink]="['/']" [fragment]="'features'">Features</a>
+        <a [routerLink]="['/']" [fragment]="'about'">About</a>
+      </div>
+
+      <div class="landing-nav__actions">
+        <button
+          type="button"
+          class="theme-toggle"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+          [attr.aria-pressed]="themeService.isDark()"
+          (click)="toggleTheme()"
+        >
+          <span class="theme-toggle__track" aria-hidden="true">
+            <mat-icon class="theme-toggle__icon theme-toggle__icon--sun">light_mode</mat-icon>
+            <mat-icon class="theme-toggle__icon theme-toggle__icon--moon">dark_mode</mat-icon>
+            <span class="theme-toggle__thumb"></span>
+          </span>
+          <span class="theme-toggle__label">{{ themeService.isDark() ? 'Dark' : 'Light' }}</span>
+        </button>
+        <button mat-button class="btn btn-ghost btn-sm" routerLink="/login">Sign In</button>
+        <button mat-flat-button class="btn btn-primary btn-sm" routerLink="/register">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="landing-hero">
+    <div class="landing-hero__copy">
+      <span class="landing-eyebrow">Task Management and Collaboration</span>
+      <h1>Focused planning for teams that want less noise and more momentum.</h1>
+      <p>
+        FlowBoard brings boards, workspaces, timelines, and team updates into one calm interface built for daily execution.
+      </p>
+
+      <div class="landing-hero__actions">
+        <button mat-flat-button class="btn btn-primary btn-lg" routerLink="/register">
+          <mat-icon>arrow_forward</mat-icon>
+          Create Account
+        </button>
+        <button mat-button class="btn btn-secondary btn-lg" routerLink="/login">
+          <mat-icon>login</mat-icon>
+          Sign In
+        </button>
+      </div>
+
+      <div class="landing-proof">
+        <span>No credit card required</span>
+        <span>Realtime boards</span>
+        <span>Admin + billing included</span>
+      </div>
+    </div>
+
+    <div class="landing-hero__preview card">
+      <div class="preview-header">
+        <div>
+          <h3>Product Sprint</h3>
+          <p>April 2026</p>
+        </div>
+        <span class="badge badge-progress">Live</span>
+      </div>
+
+      <div class="preview-board">
+        <article class="preview-column">
+          <div class="preview-column__header">
+            <span>Backlog</span>
+            <span>3</span>
+          </div>
+          <div class="preview-card">
+            <strong>Design system polish</strong>
+            <span class="badge badge-review">Review</span>
+          </div>
+          <div class="preview-card">
+            <strong>Invite flow refresh</strong>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+          <div class="preview-card">
+            <strong>Billing copy cleanup</strong>
+            <span class="badge badge-low">Low</span>
+          </div>
+        </article>
+
+        <article class="preview-column">
+          <div class="preview-column__header">
+            <span>In Progress</span>
+            <span>2</span>
+          </div>
+          <div class="preview-card preview-card--active">
+            <strong>Frontend redesign</strong>
+            <span class="badge badge-high">High</span>
+          </div>
+          <div class="preview-card">
+            <strong>Workspace settings</strong>
+            <span class="badge badge-progress">Doing</span>
+          </div>
+        </article>
+
+        <article class="preview-column">
+          <div class="preview-column__header">
+            <span>Done</span>
+            <span>5</span>
+          </div>
+          <div class="preview-card">
+            <strong>Auth integration</strong>
+            <span class="badge badge-done">Done</span>
+          </div>
+          <div class="preview-card">
+            <strong>Board API wiring</strong>
+            <span class="badge badge-done">Done</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-features" id="features">
+    <div class="landing-section__header">
+      <span class="landing-eyebrow">Why teams choose FlowBoard</span>
+      <h2>Everything your team needs to plan, track, and ship work.</h2>
+      <p>Built for clarity across daily standups, project delivery, and cross-functional coordination.</p>
+    </div>
+
+    <div class="landing-features__grid">
+      <article *ngFor="let feature of features" class="landing-feature card card-hover">
+        <div class="landing-feature__emoji">{{ feature.emoji }}</div>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="landing-about card" id="about">
+    <div>
+      <span class="landing-eyebrow">Built for modern teams</span>
+      <h2>Premium product feel, backed by a production-ready Angular app.</h2>
+    </div>
+    <p>
+      FlowBoard combines multi-workspace organization, kanban execution, notifications, analytics, and billing into one reliable collaboration tool.
+    </p>
+    <div class="landing-about__actions">
+      <button mat-flat-button class="btn btn-primary" routerLink="/register">Start Free</button>
+      <button mat-button class="btn btn-secondary" routerLink="/login">Open App</button>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    <div class="landing-footer__inner">
+      <div>
+        <div class="landing-brand">
+          <span class="landing-brand__mark">FB</span>
+          <span class="landing-brand__name">FlowBoard</span>
+        </div>
+        <p>Project management for modern teams.</p>
+      </div>
+      <div class="landing-footer__links">
+        <a [routerLink]="['/']" [fragment]="'features'">Features</a>
+        <a routerLink="/login">Sign In</a>
+        <a routerLink="/register">Create Account</a>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,73 @@
+<div class="card-create-form">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <textarea
+      formControlName="title"
+      class="card-input"
+      placeholder="Enter card title..."
+      rows="2"
+      autofocus>
+    </textarea>
+
+    <textarea
+      formControlName="description"
+      class="card-input card-input--secondary"
+      placeholder="Description"
+      rows="2">
+    </textarea>
+
+    <div class="card-create-grid">
+      <label class="card-create-field">
+        <span>Priority</span>
+        <select formControlName="priority">
+          <option *ngFor="let priority of priorities" [value]="priority">{{ priority }}</option>
+        </select>
+      </label>
+
+      <label class="card-create-field">
+        <span>Assignee</span>
+        <select formControlName="assigneeId">
+          <option value="">Unassigned</option>
+          <option *ngFor="let member of boardMembers" [value]="member.userId">
+            {{ member.displayName || ('User #' + member.userId) }}
+          </option>
+        </select>
+      </label>
+
+      <label class="card-create-field">
+        <span>Start</span>
+        <input type="date" formControlName="startDate" />
+      </label>
+
+      <label class="card-create-field">
+        <span>Due</span>
+        <input type="date" formControlName="dueDate" />
+      </label>
+    </div>
+
+    <div class="card-label-picker">
+      <span class="card-label-picker__title">Labels</span>
+      <div class="card-label-picker__options">
+        <button
+          *ngFor="let label of labelOptions"
+          type="button"
+          class="card-label-pill"
+          [class.card-label-pill--active]="hasLabel(label)"
+          [style.background]="label"
+          (click)="toggleLabel(label)"
+        >
+          {{ label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="card-create-actions">
+      <button mat-flat-button color="primary" type="submit"
+              [disabled]="loading || form.invalid">
+        {{ loading ? 'Adding...' : 'Add card' }}
+      </button>
+      <button mat-icon-button type="button" (click)="cancel()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </form>
+</div>

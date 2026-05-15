@@ -1,0 +1,357 @@
+<div class="board-layout" [class.board-layout--public]="publicView" [style.background]="board?.background || 'linear-gradient(180deg, var(--fb-bg-page), var(--fb-bg-page))'">
+  <div class="board-background-overlay"></div>
+
+  <div class="board-toolbar">
+    <div class="toolbar-left">
+      <button mat-icon-button (click)="goBack()" class="btn btn-ghost btn-icon">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div class="board-info">
+        <h1 class="board-title">{{ board?.name || 'Loading...' }}</h1>
+        <div class="board-meta">
+          <ng-container *ngIf="!publicView; else publicVisibilityBadge">
+            <button mat-button *ngIf="canManageBoard(); else visibilityBadge" [matMenuTriggerFor]="visibilityMenu" class="btn btn-secondary btn-sm">
+              <mat-icon>{{ board?.visibility === 'PUBLIC' ? 'public' : 'lock' }}</mat-icon>
+              {{ board?.visibility | titlecase }}
+              <mat-icon>expand_more</mat-icon>
+            </button>
+            <ng-template #visibilityBadge>
+              <span class="btn btn-secondary btn-sm">
+                <mat-icon>{{ board?.visibility === 'PUBLIC' ? 'public' : 'lock' }}</mat-icon>
+                {{ board?.visibility | titlecase }}
+              </span>
+            </ng-template>
+            <mat-menu #visibilityMenu="matMenu">
+              <button mat-menu-item (click)="updateVisibility('PRIVATE')">
+                <mat-icon>lock</mat-icon>
+                Private
+              </button>
+              <button mat-menu-item (click)="updateVisibility('PUBLIC')">
+                <mat-icon>public</mat-icon>
+                Public
+              </button>
+            </mat-menu>
+          </ng-container>
+          <ng-template #publicVisibilityBadge>
+            <span class="btn btn-secondary btn-sm">
+              <mat-icon>{{ board?.visibility === 'PUBLIC' ? 'public' : 'lock' }}</mat-icon>
+              {{ board?.visibility | titlecase }}
+            </span>
+          </ng-template>
+
+          <span *ngIf="board?.isClosed" class="badge badge-review">Closed</span>
+          <span *ngIf="publicView" class="badge badge-info">Read only</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <ng-container *ngIf="!publicView">
+        <div class="member-stack">
+          <div
+            *ngFor="let member of getVisibleBoardMembers(); trackBy: trackByUserId"
+            class="avatar avatar-xs member-stack__avatar"
+            [matTooltip]="member.displayName || ('User ' + member.userId)"
+          >
+            {{ getMemberInitials(member.displayName) }}
+          </div>
+          <div *ngIf="getRemainingBoardMembersCount() > 0" class="avatar avatar-xs member-stack__more">
+            +{{ getRemainingBoardMembersCount() }}
+          </div>
+        </div>
+
+        <button mat-flat-button *ngIf="canManageBoard()" class="btn btn-primary btn-sm" (click)="shareBoard()">
+          <mat-icon>person_add</mat-icon>
+          Share
+        </button>
+
+        <button mat-icon-button *ngIf="canManageBoard()" [matMenuTriggerFor]="boardActionsMenu" class="btn btn-ghost btn-icon">
+          <mat-icon>more_horiz</mat-icon>
+        </button>
+
+        <mat-menu #boardActionsMenu="matMenu">
+          <button mat-menu-item (click)="showAnalytics = true">
+            <mat-icon>analytics</mat-icon>
+            Analytics
+          </button>
+          <button mat-menu-item (click)="showArchive = true">
+            <mat-icon>archive</mat-icon>
+            Archived Items
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="deleteBoard()">
+            <mat-icon>delete</mat-icon>
+            Delete Board
+          </button>
+        </mat-menu>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="kanban-area">
+    <ng-container *ngIf="loading">
+      <div class="lists-container">
+        <div class="skeleton-list" *ngFor="let i of [1, 2, 3, 4]">
+          <div class="skeleton skeleton-title"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card skeleton-card--tall"></div>
+          <div class="skeleton skeleton-card skeleton-card--short"></div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div
+      *ngIf="!loading"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListData]="lists"
+      (cdkDropListDropped)="onListDrop($event)"
+      class="lists-container stagger-children"
+    >
+      <div *ngIf="lists.length === 0" class="board-empty-state card">
+        <mat-icon>view_kanban</mat-icon>
+        <h3>No lists yet</h3>
+        <p>Start the board by creating your first list.</p>
+        <button *ngIf="!publicView" class="btn btn-primary btn-sm" (click)="showAddList = true">Create list</button>
+      </div>
+
+      <ng-container *ngFor="let list of lists; trackBy: trackByListId">
+        <div *ngIf="!list.isArchived" cdkDrag [cdkDragData]="list" [cdkDragDisabled]="publicView" class="list-column-wrapper">
+          <div class="list-column">
+            <div class="list-column-header" cdkDragHandle>
+              <div class="list-header-main">
+                <span class="list-color-dot" *ngIf="list.color" [style.background]="list.color"></span>
+                <span class="list-name">{{ list.name }}</span>
+                <span class="list-count">{{ getCards(list.id).length }}</span>
+              </div>
+
+              <div *ngIf="!publicView" class="list-header-actions">
+                <app-color-picker [selectedColor]="list.color || null" (colorChange)="updateListColor(list, $event)"></app-color-picker>
+                <button mat-icon-button class="btn btn-ghost btn-icon" [matMenuTriggerFor]="listMenu">
+                  <mat-icon>more_horiz</mat-icon>
+                </button>
+              </div>
+
+              <mat-menu #listMenu="matMenu">
+                <button mat-menu-item (click)="archiveList(list.id)">
+                  <mat-icon>archive</mat-icon>
+                  Archive
+                </button>
+                <button mat-menu-item (click)="deleteList(list.id)">
+                  <mat-icon>delete</mat-icon>
+                  Delete
+                </button>
+              </mat-menu>
+            </div>
+
+            <div
+              cdkDropList
+              [id]="'list-' + list.id"
+              [cdkDropListData]="getCards(list.id)"
+              [cdkDropListDisabled]="publicView"
+              [cdkDropListConnectedTo]="getConnectedLists()"
+              (cdkDropListDropped)="onCardDrop($event, list.id)"
+              class="list-cards-container"
+            >
+              <ng-container *ngFor="let card of getCards(list.id); trackBy: trackByCardId">
+                <div
+                  *ngIf="!card.isArchived"
+                  cdkDrag
+                  [cdkDragData]="card"
+                  cdkDragPreviewContainer="global"
+                  class="card-item-wrapper"
+                  (cdkDragStarted)="onCardDragStarted()"
+                  (cdkDragEnded)="onCardDragEnded()"
+                  (click)="openCardDetail(card)"
+                  >
+                  <article class="card-chip">
+                    <div *ngIf="card.coverColor" class="card-chip__cover" [style.background]="card.coverColor"></div>
+
+                    <div *ngIf="card.labels?.length" class="card-chip__labels">
+                      <span *ngFor="let label of card.labels" class="card-chip__label-pill" [style.background]="label"></span>
+                    </div>
+
+                    <div class="card-chip__topline">
+                      <span class="priority-dot" [style.background]="getPriorityColor(card.priority)"></span>
+                      <span class="card-chip__eyebrow">{{ list.name }}</span>
+                    </div>
+
+                    <p class="card-chip__title">{{ card.title }}</p>
+
+                    <p *ngIf="card.description" class="card-chip__description">
+                      {{ card.description }}
+                    </p>
+
+                    <div class="card-chip__meta">
+                      <span
+                        class="badge"
+                        [ngClass]="{
+                          'badge-low': card.priority === 'LOW',
+                          'badge-medium': card.priority === 'MEDIUM',
+                          'badge-high': card.priority === 'HIGH',
+                          'badge-critical': card.priority === 'CRITICAL'
+                        }"
+                      >
+                        {{ card.priority | titlecase }}
+                      </span>
+
+                      <div class="card-chip__meta-right">
+                        <span *ngIf="card.dueDate" class="due-chip" [ngClass]="{ 'overdue': card.isOverdue }">
+                          <mat-icon>schedule</mat-icon>
+                          {{ card.dueDate | date:'MMM d' }}
+                        </span>
+                        <span *ngIf="card.status" class="status-chip">{{ card.status.replace('_', ' ') | titlecase }}</span>
+                        <span *ngIf="card.assigneeId" class="avatar avatar-xs avatar-xs--solid" [matTooltip]="getAssigneeDisplayName(card.assigneeId)">
+                          {{ getMemberInitials(getAssigneeDisplayName(card.assigneeId)) }}
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+
+                  <!-- Keep the preview in the global container so CDK owns viewport positioning. -->
+                  <ng-template cdkDragPreview [matchSize]="true">
+                    <article class="card-chip card-chip--preview">
+                      <div *ngIf="card.coverColor" class="card-chip__cover" [style.background]="card.coverColor"></div>
+
+                      <div *ngIf="card.labels?.length" class="card-chip__labels">
+                        <span *ngFor="let label of card.labels" class="card-chip__label-pill" [style.background]="label"></span>
+                      </div>
+
+                      <div class="card-chip__topline">
+                        <span class="priority-dot" [style.background]="getPriorityColor(card.priority)"></span>
+                        <span class="card-chip__eyebrow">{{ list.name }}</span>
+                      </div>
+
+                      <p class="card-chip__title">{{ card.title }}</p>
+
+                      <p *ngIf="card.description" class="card-chip__description">
+                        {{ card.description }}
+                      </p>
+
+                      <div class="card-chip__meta">
+                        <span
+                          class="badge"
+                          [ngClass]="{
+                            'badge-low': card.priority === 'LOW',
+                            'badge-medium': card.priority === 'MEDIUM',
+                            'badge-high': card.priority === 'HIGH',
+                            'badge-critical': card.priority === 'CRITICAL'
+                          }"
+                        >
+                          {{ card.priority | titlecase }}
+                        </span>
+
+                        <div class="card-chip__meta-right">
+                          <span *ngIf="card.dueDate" class="due-chip" [ngClass]="{ 'overdue': card.isOverdue }">
+                            <mat-icon>schedule</mat-icon>
+                            {{ card.dueDate | date:'MMM d' }}
+                          </span>
+                          <span *ngIf="card.status" class="status-chip">{{ card.status.replace('_', ' ') | titlecase }}</span>
+                          <span *ngIf="card.assigneeId" class="avatar avatar-xs avatar-xs--solid">
+                            {{ getMemberInitials(getAssigneeDisplayName(card.assigneeId)) }}
+                          </span>
+                        </div>
+                      </div>
+                    </article>
+                  </ng-template>
+
+                  <div *cdkDragPlaceholder class="card-placeholder"></div>
+                </div>
+              </ng-container>
+            </div>
+
+            <div *ngIf="!publicView" class="add-card-trigger">
+              <ng-container *ngIf="!showCardDetail">
+                <app-card-create
+                  *ngIf="list.id === activeAddCardListId"
+                  [listId]="list.id"
+                  [boardId]="board!.id"
+                  [boardMembers]="boardMembers"
+                  (cardCreated)="onCardCreated($event, list.id)"
+                  (cancelled)="activeAddCardListId = null"
+                >
+                </app-card-create>
+
+                <button
+                  *ngIf="list.id !== activeAddCardListId"
+                  mat-button
+                  class="add-card-trigger__button"
+                  (click)="activeAddCardListId = list.id"
+                >
+                  <mat-icon>add</mat-icon>
+                  Add a card
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="add-list-panel" *ngIf="!loading && !publicView">
+      <div *ngIf="showAddList" class="card add-list-form">
+        <div class="form-group">
+          <label class="form-label">List name</label>
+          <mat-form-field appearance="outline">
+            <input
+              matInput
+              [formControl]="$any(listForm.get('name'))"
+              (keydown.enter)="addList()"
+              (keydown.escape)="showAddList = false"
+              placeholder="e.g. In Progress"
+              autofocus
+            />
+          </mat-form-field>
+        </div>
+
+        <div class="add-list-actions">
+          <button mat-flat-button class="btn btn-primary btn-sm" (click)="addList()" [disabled]="addingList || listForm.invalid">
+            {{ addingList ? 'Adding...' : 'Add list' }}
+          </button>
+          <button mat-button class="btn btn-ghost btn-sm" (click)="showAddList = false; listForm.reset()">Cancel</button>
+        </div>
+      </div>
+
+      <button *ngIf="!showAddList" class="add-list-btn" (click)="showAddList = true">
+        <mat-icon>add</mat-icon>
+        Add another list
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="!publicView && showCardDetail && selectedCard" class="card-detail-overlay" (click)="closeCardDetail()">
+    <div class="card-detail-panel" (click)="$event.stopPropagation()">
+      <app-card-detail
+        *ngIf="showCardDetail && selectedCard"
+        [card]="selectedCard"
+        [boardMembers]="boardMembers"
+        (cardUpdated)="onCardUpdated($event)"
+        (cardDeleted)="onCardDeleted($event)"
+        (closed)="closeCardDetail()"
+      >
+      </app-card-detail>
+    </div>
+  </div>
+
+  <div *ngIf="!publicView && showAnalytics && board" class="card-detail-overlay" (click)="showAnalytics = false">
+    <div class="card-detail-panel" (click)="$event.stopPropagation()">
+      <app-board-analytics [board]="board" [allCards]="getAllCards()"></app-board-analytics>
+    </div>
+  </div>
+
+  <div *ngIf="!publicView && showArchive" class="card-detail-overlay" (click)="showArchive = false">
+    <div class="card-detail-panel card-detail-panel--side" (click)="$event.stopPropagation()">
+      <app-archive-manager
+        [archivedCards]="getArchivedCards()"
+        [archivedLists]="getArchivedLists()"
+        (restoreCard)="restoreCard($event)"
+        (restoreList)="restoreList($event)"
+        (deleteCard)="deleteArchivedCard($event)"
+        (deleteList)="deleteArchivedList($event)"
+        (closed)="showArchive = false"
+      >
+      </app-archive-manager>
+    </div>
+  </div>
+</div>

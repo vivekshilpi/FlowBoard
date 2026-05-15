@@ -1,0 +1,271 @@
+.profile-page {
+  gap: 24px;
+}
+
+.profile-page__header {
+  margin-bottom: 0;
+}
+
+.profile-page__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-page__content {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 24px;
+}
+
+.profile-summary {
+  align-self: start;
+  text-align: center;
+}
+
+.profile-summary__avatar-box {
+  margin-bottom: 20px;
+}
+
+.profile-summary__avatar,
+.profile-summary__avatar-image {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--fb-text-on-accent);
+  object-fit: cover;
+  box-shadow: var(--fb-shadow-md);
+}
+
+.profile-summary__meta {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.profile-summary__facts {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.profile-summary__fact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--fb-text-secondary);
+  text-align: left;
+}
+
+.profile-sections {
+  display: grid;
+  gap: 24px;
+}
+
+.profile-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: none;
+}
+
+.profile-pagination p {
+  margin-top: 6px;
+  color: var(--fb-text-secondary);
+}
+
+.profile-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.profile-pagination__status {
+  color: var(--fb-text-secondary);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.profile-section {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-section__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.profile-section__header > .mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+  color: var(--fb-accent);
+  margin-top: 2px;
+}
+
+.profile-section__header p {
+  margin-top: 6px;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.profile-section__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.avatar-upload {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.avatar-upload__preview {
+  display: grid;
+  place-items: center;
+}
+
+.avatar-upload__content {
+  display: grid;
+  gap: 10px;
+}
+
+.avatar-upload__content p,
+.avatar-upload__content small {
+  color: var(--fb-text-secondary);
+}
+
+.avatar-upload__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar-upload__button {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.avatar-upload__button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.form-error {
+  color: var(--fb-danger, #b42318);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.activity-log {
+  display: grid;
+  gap: 14px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 8px;
+  padding-bottom: 4px;
+}
+
+.activity-log::-webkit-scrollbar {
+  width: 8px;
+}
+
+.activity-log::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--fb-text-secondary) 28%, transparent);
+  border-radius: 999px;
+}
+
+.activity-log__item {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.activity-log__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--fb-accent);
+  margin-top: 6px;
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--fb-accent) 18%, transparent);
+}
+
+.activity-log__content {
+  display: grid;
+  gap: 4px;
+}
+
+.activity-log__summary {
+  margin: 0;
+  color: var(--fb-text-primary);
+  font-weight: 500;
+}
+
+.activity-log__meta {
+  color: var(--fb-text-secondary);
+  font-size: 0.86rem;
+}
+
+.activity-log__empty {
+  min-height: 72px;
+  display: grid;
+  place-items: center;
+  color: var(--fb-text-secondary);
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--fb-white-rgb), 0.78);
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  gap: 16px;
+  z-index: 1000;
+}
+
+@media (max-width: 900px) {
+  .profile-page__content,
+  .profile-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .profile-pagination__controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .avatar-upload {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-page {
+    padding: 24px 16px;
+  }
+}

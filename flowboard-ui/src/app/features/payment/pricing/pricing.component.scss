@@ -1,0 +1,173 @@
+.pricing-page {
+  gap: 24px;
+}
+
+.pricing-page__header {
+  text-align: left;
+}
+
+.pricing-page__title {
+  margin: 0;
+}
+
+.pricing-page__subtitle {
+  max-width: 56ch;
+}
+
+.billing-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 6px;
+  border-radius: var(--fb-r-full);
+  border: 1px solid var(--fb-border);
+  background: color-mix(in srgb, var(--fb-bg-surface) 84%, var(--fb-accent-soft));
+}
+
+.billing-toggle__save {
+  display: inline-flex;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: var(--fb-r-full);
+  background: var(--fb-success-bg);
+  color: var(--fb-success-text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.subscription-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--fb-info-border);
+  border-radius: var(--fb-r-xl);
+  background: linear-gradient(180deg, var(--fb-info-bg) 0%, var(--fb-bg-surface) 100%);
+}
+
+.subscription-banner p + p {
+  margin-top: 4px;
+}
+
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.plan-card {
+  position: relative;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.plan-card--featured {
+  border-color: var(--fb-accent-border);
+  box-shadow: var(--fb-shadow-md);
+}
+
+.plan-card--featured::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--fb-accent-soft) 62%, transparent), transparent 52%);
+  pointer-events: none;
+}
+
+.plan-card__popular {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: var(--fb-r-full);
+  background: var(--fb-accent);
+  color: var(--fb-text-on-accent);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.plan-card__description {
+  min-height: 40px;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.plan-price__amount {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fb-text-primary);
+}
+
+.plan-price__per {
+  font-size: 13px;
+  color: var(--fb-text-secondary);
+}
+
+.plan-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--fb-text-secondary);
+}
+
+.plan-features .mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  margin-top: 1px;
+}
+
+.is-included {
+  color: var(--fb-success-text);
+}
+
+.is-excluded {
+  color: var(--fb-text-hint);
+}
+
+.pricing-skeleton {
+  height: 320px;
+}
+
+.pricing-footnote {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.pricing-footnote p {
+  max-width: 60ch;
+}
+
+@media (max-width: 768px) {
+  .subscription-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .billing-toggle {
+    flex-wrap: wrap;
+    border-radius: var(--fb-r-lg);
+  }
+}

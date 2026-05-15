@@ -1,0 +1,114 @@
+<div class="pricing-page page-shell page-shell--wide page-enter">
+    <header class="pricing-page__header page-shell__hero">
+      <div class="page-shell__copy">
+      <span class="pricing-page__eyebrow">Pricing</span>
+      <h1 class="pricing-page__title">Simple, transparent pricing</h1>
+      <p class="pricing-page__subtitle">Start free and upgrade when your team needs more scale, flexibility, and control.</p>
+
+      <div class="billing-toggle">
+        <button (click)="billing.set('MONTHLY')" class="btn btn-sm" [ngClass]="billing()==='MONTHLY' ? 'btn-primary' : 'btn-ghost'">
+          Monthly
+        </button>
+        <button (click)="billing.set('YEARLY')" class="btn btn-sm" [ngClass]="billing()==='YEARLY' ? 'btn-primary' : 'btn-ghost'">
+          Yearly
+          <span class="billing-toggle__save">Save 17%</span>
+        </button>
+      </div>
+      </div>
+    </header>
+
+    @if (subscription() && subscription()!.planName !== 'FREE' && subscription()!.status === 'ACTIVE') {
+      <div class="subscription-banner">
+        <div>
+          <p><strong>Active plan:</strong> {{ subscription()!.planDisplayName }}</p>
+          <p>Renews {{ subscription()!.currentPeriodEnd | date:'MMM d, y' }}</p>
+        </div>
+        <button (click)="cancel()" class="btn btn-ghost btn-sm">Cancel subscription</button>
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="plan-grid stagger-children">
+        @for (i of [1,2,3]; track i) {
+          <div class="card plan-card">
+            <div class="skeleton pricing-skeleton"></div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (!loading()) {
+      <div class="plan-grid stagger-children">
+        @for (plan of plans(); track plan.id) {
+          <article class="card plan-card" [class.plan-card--featured]="plan.name === 'PRO'">
+            @if (plan.name === 'PRO') {
+              <span class="plan-card__popular">Most Popular</span>
+            }
+
+            <h3>{{ plan.displayName }}</h3>
+            <p class="plan-card__description">{{ plan.description }}</p>
+
+            <div class="plan-price">
+              <span class="plan-price__amount">${{ getPrice(plan) }}</span>
+              <span class="plan-price__per">/mo{{ billing() === 'YEARLY' && plan.priceMonthly > 0 ? ', billed yearly' : '' }}</span>
+            </div>
+
+            <button
+              (click)="subscribe(plan)"
+              [disabled]="purchasing() || isCurrentPlan(plan)"
+              class="btn btn-lg"
+              [ngClass]="isCurrentPlan(plan) ? 'btn-secondary' : 'btn-primary'"
+            >
+              {{ isCurrentPlan(plan) ? 'Current Plan' : plan.name === 'FREE' ? 'Get Started' : purchasing() ? 'Redirecting...' : 'Upgrade to ' + plan.displayName }}
+            </button>
+
+            <ul class="plan-features">
+              <li>
+                <mat-icon class="is-included">check_circle</mat-icon>
+                {{ plan.maxWorkspaces === -1 ? 'Unlimited workspaces' : plan.maxWorkspaces + ' workspaces' }}
+              </li>
+              <li>
+                <mat-icon class="is-included">check_circle</mat-icon>
+                {{ plan.maxBoardsPerWorkspace === -1 ? 'Unlimited boards' : plan.maxBoardsPerWorkspace + ' boards per workspace' }}
+              </li>
+              <li>
+                <mat-icon class="is-included">check_circle</mat-icon>
+                {{ plan.maxMembersPerWorkspace === -1 ? 'Unlimited members' : 'Up to ' + plan.maxMembersPerWorkspace + ' members' }}
+              </li>
+              <li>
+                <mat-icon [ngClass]="plan.hasAdvancedAnalytics ? 'is-included' : 'is-excluded'">
+                  {{ plan.hasAdvancedAnalytics ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                Advanced analytics & board stats
+              </li>
+              <li>
+                <mat-icon [ngClass]="plan.hasCustomFields ? 'is-included' : 'is-excluded'">
+                  {{ plan.hasCustomFields ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                Custom card fields
+              </li>
+              <li>
+                <mat-icon [ngClass]="plan.hasAutomation ? 'is-included' : 'is-excluded'">
+                  {{ plan.hasAutomation ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                Automation rules
+              </li>
+              <li>
+                <mat-icon [ngClass]="plan.hasPrioritySupport ? 'is-included' : 'is-excluded'">
+                  {{ plan.hasPrioritySupport ? 'check_circle' : 'cancel' }}
+                </mat-icon>
+                Priority support
+              </li>
+            </ul>
+          </article>
+        }
+      </div>
+    }
+
+    <div class="pricing-footnote">
+      <p>
+        All plans include due-date reminders, overdue alerts, and activity history.
+        <a routerLink="/dashboard">Back to dashboard</a>
+      </p>
+    </div>
+</div>

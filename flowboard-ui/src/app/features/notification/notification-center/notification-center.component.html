@@ -1,0 +1,145 @@
+<button
+  mat-icon-button
+  [matMenuTriggerFor]="notifMenu"
+  class="notif-bell btn btn-ghost btn-icon notif-menu-anchor"
+>
+  <mat-icon
+    [matBadge]="unreadCount$ | async"
+    [matBadgeHidden]="(unreadCount$ | async) === 0"
+    matBadgeColor="warn"
+    matBadgeSize="small"
+  >
+    notifications
+  </mat-icon>
+</button>
+
+<mat-menu #notifMenu="matMenu" class="modern-notif-menu" xPosition="before" yPosition="below">
+  <div class="notif-dropdown">
+    <div class="notif-dropdown__header">
+      <div>
+        <h3>Notifications</h3>
+        <p>Stay on top of updates across your boards.</p>
+      </div>
+      <button mat-button class="btn btn-ghost btn-sm" (click)="markAllAsRead()">Mark all as read</button>
+    </div>
+
+    <div class="notif-dropdown__scroll">
+      @if ((notifications$ | async); as notifications) {
+        @if (notifications.length === 0) {
+          <div class="notif-empty">
+            <mat-icon>notifications_none</mat-icon>
+            <span>All caught up!</span>
+          </div>
+        }
+
+        @for (notif of notifications; track notif.id) {
+          <article class="notif-item" [class.unread]="!notif.isRead" (click)="openNotification(notif)">
+            <span
+              class="notif-item__accent"
+              [ngClass]="{
+                'notif-item__accent--assignment': notif.type === 'ASSIGNMENT',
+                'notif-item__accent--due': notif.type === 'DUE_DATE' || notif.type === 'OVERDUE',
+                'notif-item__accent--mention': notif.type === 'MENTION',
+                'notif-item__accent--move': notif.type === 'MOVE'
+              }"
+            ></span>
+
+            <div class="notif-item__icon" [ngClass]="notif.type.toLowerCase()">
+              <mat-icon>{{ getTypeIcon(notif.type) }}</mat-icon>
+            </div>
+
+            <div class="notif-item__content">
+              <span class="notif-item__time">{{ getCategoryLabel(notif.type) }}</span>
+              <p class="notif-item__title">{{ notif.title }}</p>
+              <p class="notif-item__message">{{ notif.message }}</p>
+              <span class="notif-item__time" [attr.title]="formatAbsoluteTime(notif.createdAt)">{{ formatRelativeTime(notif.createdAt) }}</span>
+            </div>
+
+            <button
+              mat-icon-button
+              class="notif-item__delete"
+              (click)="deleteNotification(notif.id, $event)"
+              aria-label="Delete notification"
+              title="Delete notification"
+            >
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+            <span *ngIf="!notif.isRead" class="notif-item__dot pulse"></span>
+          </article>
+        }
+      }
+    </div>
+
+    <div class="notif-dropdown__footer">
+      <a routerLink="/notifications" class="btn btn-secondary btn-sm">View all notifications</a>
+    </div>
+  </div>
+</mat-menu>
+
+@if (isNotificationsRoute()) {
+<section class="notification-page page-shell page-enter">
+  <header class="notification-page__header page-shell__hero">
+    <div class="page-shell__copy">
+    <span class="page-shell__eyebrow">Inbox</span>
+    <h1>Notifications</h1>
+    <p>Assignments, mentions, due dates, and movement across your workspace.</p>
+    </div>
+  </header>
+
+  <div class="notification-page__list page-surface">
+    @if ((notifications$ | async); as notifications) {
+      @if (notifications.length === 0) {
+        <div class="empty-state-panel">
+          <mat-icon>notifications_none</mat-icon>
+          <h3>Nothing new right now</h3>
+          <p>When teammates assign, mention, or move work, updates will appear here.</p>
+        </div>
+      }
+
+      @for (notif of notifications.slice(0, visiblePageItems); track notif.id) {
+        <article class="notif-item" [class.unread]="!notif.isRead" (click)="openNotification(notif)">
+          <span
+            class="notif-item__accent"
+            [ngClass]="{
+              'notif-item__accent--assignment': notif.type === 'ASSIGNMENT',
+              'notif-item__accent--due': notif.type === 'DUE_DATE' || notif.type === 'OVERDUE',
+              'notif-item__accent--mention': notif.type === 'MENTION',
+              'notif-item__accent--move': notif.type === 'MOVE'
+            }"
+          ></span>
+
+          <div class="notif-item__icon" [ngClass]="notif.type.toLowerCase()">
+            <mat-icon>{{ getTypeIcon(notif.type) }}</mat-icon>
+          </div>
+
+          <div class="notif-item__content">
+            <span class="notif-item__time">{{ getCategoryLabel(notif.type) }}</span>
+            <p class="notif-item__title">{{ notif.title }}</p>
+            <p class="notif-item__message">{{ notif.message }}</p>
+            <span class="notif-item__time" [attr.title]="formatAbsoluteTime(notif.createdAt)">
+              {{ formatRelativeTime(notif.createdAt) }} · {{ notif.createdAt | date:'MMM d, h:mm a' }}
+            </span>
+          </div>
+
+          <button
+            mat-icon-button
+            class="notif-item__delete"
+            (click)="deleteNotification(notif.id, $event)"
+            aria-label="Delete notification"
+            title="Delete notification"
+          >
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+          <span *ngIf="!notif.isRead" class="notif-item__dot pulse"></span>
+        </article>
+      }
+
+      @if (canLoadMore(notifications.length)) {
+        <div class="notification-page__footer">
+          <button mat-stroked-button class="btn btn-secondary" (click)="loadMore()">Load more</button>
+        </div>
+      }
+    }
+  </div>
+</section>
+}

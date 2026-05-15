@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FlowboardUi</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    (function () {
+      var storageKey = 'flowboard.theme';
+      var root = document.documentElement;
+      var storedTheme = null;
+
+      try {
+        storedTheme = localStorage.getItem(storageKey);
+      } catch (error) {
+        storedTheme = null;
+      }
+
+      var resolvedTheme = storedTheme === 'light' || storedTheme === 'dark'
+        ? storedTheme
+        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+      root.setAttribute('data-theme', resolvedTheme);
+    })();
+  </script>
+</head>
+<body class="mat-typography">
+  <app-root></app-root>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<div
+  class="app-shell"
+  [class.app-shell--sidebar-collapsed]="sidebarCollapsed() && isDesktop()"
+  [class.app-shell--sidebar-open]="mobileSidebarOpen()"
+>
+  <button
+    *ngIf="mobileSidebarOpen() && !isDesktop()"
+    type="button"
+    class="app-shell__backdrop"
+    aria-label="Close navigation"
+    (click)="closeMobileSidebar()"
+  ></button>
+
+  <aside class="app-sidebar" [class.app-sidebar--visible]="isSidebarVisible()">
+    <div class="app-sidebar__inner">
+      <a routerLink="/dashboard" class="sidebar-brand" (click)="closeMobileSidebar()">
+        <span class="brand-mark">FB</span>
+        <span class="brand-copy">
+          <span class="brand-name">FlowBoard</span>
+          <span class="brand-tag">Calm work management</span>
+        </span>
+      </a>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section__label-wrap">
+          <p class="nav-section-label">Overview</p>
+          <span class="sidebar-section__hint">Work faster</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
+            <mat-icon>space_dashboard</mat-icon>
+            <span class="nav-item__label">Dashboard</span>
+          </a>
+          <a routerLink="/notifications" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
+            <mat-icon>notifications</mat-icon>
+            <span class="nav-item__label">Notifications</span>
+          </a>
+          <a routerLink="/pricing" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
+            <mat-icon>workspace_premium</mat-icon>
+            <span class="nav-item__label">Billing</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-section__label-wrap">
+          <p class="nav-section-label">Account</p>
+          <span class="sidebar-section__hint">Personal settings</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <a routerLink="/profile" routerLinkActive="active" class="nav-item" (click)="closeMobileSidebar()">
+            <mat-icon>person</mat-icon>
+            <span class="nav-item__label">Profile</span>
+          </a>
+          <a
+            *ngIf="authService.isAdmin()"
+            routerLink="/admin"
+            routerLinkActive="active"
+            class="nav-item nav-item--admin"
+            (click)="closeMobileSidebar()"
+          >
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span class="nav-item__label">Admin</span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-promo">
+        <div class="sidebar-promo__glow"></div>
+        <span class="sidebar-promo__eyebrow">Current plan</span>
+        <strong>{{ planName() }}</strong>
+        <p>{{ isFreeUser() ? 'Upgrade for unlimited workspaces and a more powerful workspace hub.' : 'Your workspace is ready for advanced collaboration.' }}</p>
+        <a routerLink="/pricing" class="btn btn-secondary btn-sm sidebar-promo__cta" (click)="closeMobileSidebar()">
+          <mat-icon>{{ isFreeUser() ? 'bolt' : 'tune' }}</mat-icon>
+          {{ isFreeUser() ? 'See plans' : 'Manage plan' }}
+        </a>
+      </div>
+
+      <div *ngIf="user$ | async as user" class="sidebar-user">
+        <div class="avatar avatar-md sidebar-user__avatar">
+          <img *ngIf="getAvatarUrl(user.avatarUrl)" [src]="getAvatarUrl(user.avatarUrl)" alt="Profile avatar" class="sidebar-user__avatar-image" />
+          <span *ngIf="!getAvatarUrl(user.avatarUrl)">{{ getInitials(user.fullName) }}</span>
+        </div>
+        <div class="sidebar-user__content">
+          <span class="sidebar-user__label">Signed in as</span>
+          <span class="sidebar-user__name">{{ user.fullName || 'User' }}</span>
+          <span class="sidebar-user__email">{{ user.email }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button
+          type="button"
+          class="btn btn-secondary btn-icon topbar-toggle"
+          [attr.aria-label]="isDesktop() ? 'Collapse navigation' : 'Open navigation'"
+          (click)="toggleSidebar()"
+        >
+          <mat-icon>{{ mobileSidebarOpen() && !isDesktop() ? 'close' : 'menu' }}</mat-icon>
+        </button>
+
+        <div class="topbar-title">
+          <span class="topbar-title__eyebrow">Workspace Hub</span>
+          <span class="topbar-title__heading">Focused collaboration</span>
+        </div>
+      </div>
+
+      <div class="topbar-search">
+        <app-search></app-search>
+      </div>
+
+      <div class="header-right">
+        <a *ngIf="isFreeUser()" routerLink="/pricing" class="btn btn-primary btn-sm">
+          <mat-icon>bolt</mat-icon>
+          Upgrade
+        </a>
+
+        <a *ngIf="!isFreeUser()" routerLink="/pricing" class="plan-pill">
+          <mat-icon>workspace_premium</mat-icon>
+          <span>{{ planName() }}</span>
+        </a>
+
+        <app-notification-center></app-notification-center>
+
+        <button
+          type="button"
+          class="theme-toggle"
+          [attr.aria-label]="themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme'"
+          [attr.aria-pressed]="themeService.isDark()"
+          [matTooltip]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          (click)="toggleTheme()"
+        >
+          <span class="theme-toggle__track" aria-hidden="true">
+            <mat-icon class="theme-toggle__icon theme-toggle__icon--sun">light_mode</mat-icon>
+            <mat-icon class="theme-toggle__icon theme-toggle__icon--moon">dark_mode</mat-icon>
+            <span class="theme-toggle__thumb"></span>
+          </span>
+          <span class="theme-toggle__label">{{ themeService.isDark() ? 'Dark' : 'Light' }}</span>
+        </button>
+
+        <button type="button" [matMenuTriggerFor]="userMenu" class="profile-trigger">
+          <div class="avatar avatar-sm">
+            <img *ngIf="getAvatarUrl((user$ | async)?.avatarUrl)" [src]="getAvatarUrl((user$ | async)?.avatarUrl)" alt="Profile avatar" class="profile-trigger__avatar-image" />
+            <span *ngIf="!(getAvatarUrl((user$ | async)?.avatarUrl))">{{ getInitials((user$ | async)?.fullName) }}</span>
+          </div>
+          <span class="profile-trigger__copy">
+            <span class="profile-trigger__name">{{ (user$ | async)?.fullName || 'User' }}</span>
+          </span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
+
+        <mat-menu #userMenu="matMenu">
+          <div class="menu-header">
+            <p class="menu-header__label">Signed in as</p>
+            <p class="menu-header__email">{{ (user$ | async)?.email }}</p>
+            <p class="menu-header__plan">{{ planName() }} Plan</p>
+          </div>
+          <button mat-menu-item routerLink="/profile">
+            <mat-icon>person_outline</mat-icon>
+            My Profile
+          </button>
+          <button mat-menu-item routerLink="/pricing">
+            <mat-icon>workspace_premium</mat-icon>
+            {{ isFreeUser() ? 'Upgrade Plan' : 'Manage Subscription' }}
+          </button>
+          <button mat-menu-item *ngIf="authService.isAdmin()" routerLink="/admin">
+            <mat-icon>admin_panel_settings</mat-icon>
+            Admin Dashboard
+          </button>
+          <mat-divider></mat-divider>
+          <button mat-menu-item (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Sign Out
+          </button>
+        </mat-menu>
+      </div>
+    </header>
+
+    <main class="page-body shell-page">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

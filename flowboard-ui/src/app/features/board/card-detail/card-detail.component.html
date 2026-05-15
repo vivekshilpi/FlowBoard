@@ -1,0 +1,383 @@
+<div class="card-drawer">
+  <div *ngIf="card.coverColor" class="card-drawer__cover" [style.background]="card.coverColor"></div>
+
+  <header class="card-drawer__header">
+    <div class="card-drawer__title-block">
+      <mat-icon>credit_card</mat-icon>
+
+      <div class="card-drawer__title-copy">
+        <div *ngIf="!editTitle" class="card-drawer__title-row">
+          <h2 (click)="editTitle = true; editedTitle = card.title">{{ card.title }}</h2>
+          <button mat-icon-button class="btn btn-ghost btn-icon" (click)="editTitle = true; editedTitle = card.title">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
+
+        <div *ngIf="editTitle" class="card-drawer__title-edit">
+          <input [(ngModel)]="editedTitle" (keydown.enter)="saveTitle()" (keydown.escape)="editTitle = false" class="input" autofocus />
+          <button mat-flat-button class="btn btn-primary btn-sm" (click)="saveTitle()" [disabled]="saving">Save</button>
+          <button mat-button class="btn btn-ghost btn-sm" (click)="editTitle = false">Cancel</button>
+        </div>
+
+        <div class="card-drawer__badges">
+          <span
+            class="badge"
+            [ngClass]="{
+              'badge-todo': card.status === 'TO_DO',
+              'badge-progress': card.status === 'IN_PROGRESS',
+              'badge-review': card.status === 'IN_REVIEW',
+              'badge-done': card.status === 'DONE'
+            }"
+          >
+            {{ statusLabels[card.status] }}
+          </span>
+          <span *ngIf="isOverdue()" class="badge badge-high">Overdue</span>
+          <span *ngFor="let label of selectedLabels" class="card-label-pill" [style.background]="label">
+            {{ label }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <button mat-icon-button class="btn btn-ghost btn-icon" (click)="close()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+
+  <div class="card-drawer__body">
+    <section class="card-drawer__main">
+      <section class="drawer-section">
+        <div class="drawer-section__heading">
+          <mat-icon>notes</mat-icon>
+          <h3>Description</h3>
+          <button *ngIf="!editMode" mat-button class="btn btn-ghost btn-sm" (click)="editMode = true; editedDescription = card.description || ''">
+            Edit
+          </button>
+        </div>
+
+        <div *ngIf="!editMode" class="drawer-section__content">
+          <p>{{ card.description || 'No description yet. Add context, goals, or handoff notes here.' }}</p>
+        </div>
+
+        <div *ngIf="editMode" class="drawer-section__editor">
+          <textarea [(ngModel)]="editedDescription" rows="5"></textarea>
+          <div class="drawer-section__actions">
+            <button mat-flat-button class="btn btn-primary btn-sm" (click)="saveDescription()" [disabled]="saving">
+              {{ saving ? 'Saving...' : 'Save' }}
+            </button>
+            <button mat-button class="btn btn-ghost btn-sm" (click)="editMode = false">Cancel</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <div class="drawer-section__heading">
+          <mat-icon>label</mat-icon>
+          <h3>Labels</h3>
+          <button mat-button class="btn btn-primary btn-sm" (click)="saveLabels()" [disabled]="saving">Save labels</button>
+        </div>
+
+        <div class="drawer-section__content drawer-section__content--flush">
+          <div class="label-grid">
+            <button
+              *ngFor="let label of labelOptions"
+              type="button"
+              class="label-chip"
+              [class.label-chip--selected]="selectedLabels.includes(label)"
+              [style.--label-color]="label"
+              (click)="toggleLabel(label)"
+            >
+              <span class="label-chip__swatch" [style.background]="label"></span>
+              <span>{{ label }}</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <div class="drawer-section__heading">
+          <mat-icon>checklist</mat-icon>
+          <h3>Checklist</h3>
+          <span class="drawer-section__meta" *ngIf="checklistItems.length > 0">{{ checklistProgress() }}%</span>
+        </div>
+
+        <div class="drawer-section__content drawer-section__content--flush">
+          <div *ngIf="checklistItems.length > 0" class="checklist-progress">
+            <mat-progress-bar mode="determinate" [value]="checklistProgress()"></mat-progress-bar>
+          </div>
+
+          <div class="checklist-list" *ngIf="checklistItems.length > 0; else emptyChecklist">
+            <label *ngFor="let item of checklistItems" class="checklist-item">
+              <input type="checkbox" [checked]="item.completed" (change)="toggleChecklistItem(item.id)" />
+              <span [class.checklist-item__text--done]="item.completed">{{ item.text }}</span>
+              <button type="button" class="btn btn-ghost btn-sm checklist-item__remove" (click)="removeChecklistItem(item.id)">
+                Remove
+              </button>
+            </label>
+          </div>
+
+          <ng-template #emptyChecklist>
+            <div class="drawer-empty drawer-empty--small">
+              <p>No checklist items yet.</p>
+            </div>
+          </ng-template>
+
+          <div class="checklist-add">
+            <input
+              [(ngModel)]="newChecklistText"
+              class="input"
+              placeholder="Add a checklist item"
+              (keydown.enter)="addChecklistItem()"
+            />
+            <button mat-flat-button class="btn btn-primary btn-sm" (click)="addChecklistItem()" [disabled]="!newChecklistText.trim() || saving">
+              Add item
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <div class="drawer-section__heading">
+          <mat-icon>attach_file</mat-icon>
+          <h3>Attachments</h3>
+          <label class="btn btn-secondary btn-sm attachment-upload">
+            <input type="file" hidden (change)="onAttachmentSelected($event)" />
+            Upload file
+          </label>
+        </div>
+
+        <div class="drawer-section__content drawer-section__content--flush">
+          <div *ngIf="(card.attachments?.length || 0) === 0" class="drawer-empty drawer-empty--small">
+            <p>No attachments yet.</p>
+          </div>
+
+          <div *ngIf="(card.attachments?.length || 0) > 0" class="attachment-list">
+            <article *ngFor="let attachment of card.attachments" class="attachment-item">
+              <div class="attachment-item__info">
+                <mat-icon>description</mat-icon>
+                <div>
+                  <p>{{ attachment.fileName }}</p>
+                  <span>{{ formatFileSize(attachment.size) }} • {{ attachment.uploadedAt | date:'MMM d, h:mm a' }}</span>
+                </div>
+              </div>
+              <div class="attachment-item__actions">
+                <button mat-button class="btn btn-ghost btn-sm" (click)="downloadAttachment(attachment)">Download</button>
+                <button mat-button class="btn btn-danger btn-sm" (click)="deleteAttachment(attachment)">Delete</button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <div class="drawer-section__heading">
+          <mat-icon>history</mat-icon>
+          <h3>Activity</h3>
+        </div>
+
+        <div class="drawer-section__editor">
+          <div *ngIf="replyToActivityId" class="comment-context">
+            <span>Replying to: {{ getParentPreview(replyToActivityId) }}</span>
+            <button mat-button class="btn btn-ghost btn-sm" (click)="cancelReply()">Cancel</button>
+          </div>
+
+          <textarea
+            [(ngModel)]="commentText"
+            rows="3"
+            placeholder="Add a comment or mention teammates"
+          ></textarea>
+
+          <div *ngIf="boardMembers.length > 0" class="drawer-section__actions">
+            <button
+              *ngFor="let member of boardMembers"
+              mat-button
+              class="btn btn-ghost btn-sm"
+              [class.btn-primary]="isMentionSelected(member.userId)"
+              (click)="toggleMention(member.userId)"
+            >
+              {{ member.displayName || ('User #' + member.userId) }}
+            </button>
+          </div>
+
+          <div class="drawer-section__actions">
+            <button mat-flat-button class="btn btn-primary btn-sm" (click)="submitComment()" [disabled]="saving || !commentText.trim()">
+              {{ saving ? 'Posting...' : (replyToActivityId ? 'Post reply' : 'Post comment') }}
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="loadingActivity" class="drawer-loading">
+          <mat-spinner diameter="18"></mat-spinner>
+          <span>Loading activity...</span>
+        </div>
+
+        <div *ngIf="!loadingActivity && activity.length === 0" class="drawer-empty">
+          <mat-icon>forum</mat-icon>
+          <p>No activity yet.</p>
+        </div>
+
+        <div *ngIf="!loadingActivity && activity.length > 0" class="comment-list">
+          <article *ngFor="let log of activity" class="comment-item" [class.comment-item--reply]="isReply(log)">
+            <div class="avatar avatar-sm">
+              {{ getCommentAuthor(log).slice(0, 1) }}
+            </div>
+
+            <div class="comment-item__content">
+              <div class="comment-item__header">
+                <strong>{{ getCommentAuthor(log) }}</strong>
+                <span class="comment-timestamp">{{ log.createdAt | date:'MMM d, h:mm a' }}</span>
+              </div>
+
+              <div *ngIf="isReply(log)" class="comment-parent">
+                Replying to: {{ getParentPreview(log.parentActivityId) }}
+              </div>
+
+              <div class="comment-bubble" [class.comment-bubble--deleted]="log.actionType === 'COMMENT_DELETED'">
+                <ng-container *ngIf="editingCommentId !== log.id; else commentEditMode">
+                  <p>{{ log.description }}</p>
+                </ng-container>
+
+                <ng-template #commentEditMode>
+                  <textarea [(ngModel)]="editingCommentText" rows="3"></textarea>
+                  <div class="drawer-section__actions">
+                    <button mat-flat-button class="btn btn-primary btn-sm" (click)="saveEditedComment(log)" [disabled]="!editingCommentText.trim()">Save</button>
+                    <button mat-button class="btn btn-ghost btn-sm" (click)="cancelEditComment()">Cancel</button>
+                  </div>
+                </ng-template>
+              </div>
+
+              <div class="comment-actions" *ngIf="isComment(log) && log.actionType !== 'COMMENT_DELETED'">
+                <button mat-button class="btn btn-ghost btn-sm" (click)="startReply(log.id)">Reply</button>
+                <button *ngIf="isOwnComment(log) && editingCommentId !== log.id" mat-button class="btn btn-ghost btn-sm" (click)="startEditComment(log)">Edit</button>
+                <button *ngIf="isOwnComment(log)" mat-button class="btn btn-danger btn-sm" (click)="deleteComment(log)">Delete</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+
+    <aside class="card-drawer__meta">
+      <section class="meta-group">
+        <p class="meta-group__label">Status</p>
+        <div class="meta-group__stack">
+          <button
+            *ngFor="let s of statuses"
+            (click)="setStatus(s)"
+            class="meta-choice"
+            [class.meta-choice--active]="card.status === s"
+          >
+            <mat-icon>{{ statusIcons[s] }}</mat-icon>
+            {{ statusLabels[s] }}
+          </button>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Priority</p>
+        <div class="meta-group__stack">
+          <button
+            *ngFor="let p of priorities"
+            (click)="setPriority(p)"
+            class="meta-choice"
+            [class.meta-choice--active]="card.priority === p"
+          >
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-low': p === 'LOW',
+                'badge-medium': p === 'MEDIUM',
+                'badge-high': p === 'HIGH',
+                'badge-critical': p === 'CRITICAL'
+              }"
+            >
+              {{ p | titlecase }}
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Start Date</p>
+        <input type="date" [(ngModel)]="newStartDate" />
+        <div class="drawer-section__actions">
+          <button mat-flat-button class="btn btn-primary btn-sm" (click)="saveStartDate()" [disabled]="saving">Set</button>
+          <button *ngIf="card.startDate" mat-button class="btn btn-ghost btn-sm" (click)="clearStartDate()">Clear</button>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Due Date</p>
+        <input type="date" [(ngModel)]="newDueDate" [class.meta-input--danger]="isOverdue()" />
+        <div class="drawer-section__actions">
+          <button mat-flat-button class="btn btn-primary btn-sm" (click)="saveDueDate()" [disabled]="saving">Set</button>
+          <button *ngIf="card.dueDate" mat-button class="btn btn-ghost btn-sm" (click)="clearDueDate()">Clear</button>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Assignee</p>
+        <div *ngIf="boardMembers.length === 0" class="drawer-empty drawer-empty--small">
+          <p>No members available</p>
+        </div>
+
+        <div *ngIf="boardMembers.length > 0" class="meta-group__stack">
+          <button
+            *ngFor="let m of boardMembers"
+            (click)="assignTo(m.userId)"
+            class="meta-choice meta-choice--member"
+            [class.meta-choice--active]="card.assigneeId === m.userId"
+          >
+            <div
+              class="avatar avatar-sm"
+              [style.background]="m.avatarUrl ? 'url(' + m.avatarUrl + ') center/cover' : 'hsl(' + (m.userId * 67 % 360) + ',60%,50%)'"
+            >
+              {{ m.avatarUrl ? '' : ((m.displayName || m.userId).toString().slice(0, 1)) }}
+            </div>
+            <span>{{ m.displayName || 'User #' + m.userId }}</span>
+          </button>
+          <button *ngIf="card.assigneeId" mat-button class="btn btn-ghost btn-sm meta-remove" (click)="assignTo(null)">Remove assignee</button>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Card Details</p>
+        <div class="meta-row">
+          <span class="meta-row__title">Created</span>
+          <span class="meta-row__value">{{ card.createdAt | date:'MMM d, y' }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-row__title">Updated</span>
+          <span class="meta-row__value">{{ (card.updatedAt || card.createdAt) | date:'MMM d, y' }}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-row__title">Assignee</span>
+          <span class="meta-row__value">{{ getAssigneeName(card.assigneeId) }}</span>
+        </div>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Cover Color</p>
+        <app-color-picker [selectedColor]="card.coverColor || null" (colorChange)="updateCoverColor($event)"></app-color-picker>
+      </section>
+
+      <section class="meta-group">
+        <p class="meta-group__label">Actions</p>
+        <div class="meta-group__stack">
+          <button type="button" mat-button class="btn btn-secondary btn-sm meta-action" (click)="copyCard()" [disabled]="saving">
+            <mat-icon>content_copy</mat-icon>
+            Copy Card
+          </button>
+          <button type="button" mat-button class="btn btn-secondary btn-sm meta-action" (click)="archiveCard()" [disabled]="saving">
+            <mat-icon>archive</mat-icon>
+            Archive
+          </button>
+          <button type="button" mat-button class="btn btn-danger btn-sm meta-action" (click)="deleteCard()" [disabled]="saving">
+            <mat-icon>delete</mat-icon>
+            {{ saving ? 'Deleting...' : 'Delete' }}
+          </button>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>

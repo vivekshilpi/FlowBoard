@@ -1,0 +1,51 @@
+<div class="auth-utility">
+  <div class="auth-utility__card page-enter">
+    <div class="auth-utility__header">
+      <div class="auth-utility__icon"><mat-icon>verified_user</mat-icon></div>
+      <h1>Verify your email</h1>
+      <p>We’ve sent a 6-digit verification code to <strong>{{ email }}</strong>.</p>
+    </div>
+
+    <div *ngIf="errorMessage" class="auth-utility__alert auth-utility__alert--danger">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <div *ngIf="successMessage" class="auth-utility__alert auth-utility__alert--success">
+      <mat-icon>check_circle_outline</mat-icon>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="field-stack">
+      <div class="form-group">
+        <label class="form-label">Verification Code</label>
+        <mat-form-field appearance="outline">
+          <input matInput formControlName="otp" placeholder="000000" maxlength="6" autocomplete="one-time-code" class="otp-code" />
+          <mat-hint>Enter the 6-digit code from your email</mat-hint>
+          <mat-error *ngIf="otp.hasError('required')">OTP is required</mat-error>
+          <mat-error *ngIf="otp.hasError('pattern')">Must be exactly 6 digits</mat-error>
+        </mat-form-field>
+      </div>
+
+      <button mat-flat-button class="btn btn-primary btn-lg auth-utility__submit" type="submit" [disabled]="loading || form.invalid">
+        <mat-spinner *ngIf="loading" diameter="18"></mat-spinner>
+        {{ loading ? 'Verifying...' : 'Verify & Continue' }}
+      </button>
+    </form>
+
+    <div class="auth-utility__resend">
+      <p>Didn't receive the code?</p>
+      <button mat-button class="btn btn-ghost btn-sm" (click)="resend()" [disabled]="resending">
+        <mat-spinner *ngIf="resending" diameter="16"></mat-spinner>
+        {{ resending ? 'Sending...' : 'Resend Code' }}
+      </button>
+    </div>
+
+    <div class="auth-utility__footer">
+      <a routerLink="/login" class="auth-utility__back-link">
+        <mat-icon>arrow_back</mat-icon>
+        Back to login
+      </a>
+    </div>
+  </div>
+</div>

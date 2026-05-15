@@ -1,0 +1,105 @@
+.notif-dropdown {
+  width: 360px;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdown-header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 { margin: 0; font-size: 16px; font-weight: 800; color: var(--text-primary); }
+  .mark-btn { font-size: 12px; font-weight: 700; color: var(--primary); }
+}
+
+.dropdown-body {
+  max-height: 400px;
+  overflow-y: auto;
+  min-height: 120px;
+
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-item {
+  padding: 16px 20px;
+  display: flex;
+  gap: 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative;
+
+  &:hover { background: var(--bg-secondary); }
+  &.unread { background: rgba(99, 102, 241, 0.03); }
+
+  .notif-icon-box {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+
+    &.assignment { background: #F0D5C8; color: #166534; }
+    &.due_date { background: #fef9c3; color: #854d0e; }
+    &.overdue { background: #F0D5C8; color: #AC3B61; }
+    &.mention { background: #F0D5C8; color: #123C69; }
+    &.notifications { background: #F5F2F0; color: #123C69; }
+  }
+
+  .notif-content {
+    flex: 1;
+    .notif-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+    .notif-message { font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 4px; }
+    .notif-time { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  }
+
+  .unread-dot {
+    position: absolute;
+    right: 16px;
+    top: 24px;
+    width: 8px;
+    height: 8px;
+    background: var(--primary);
+    border-radius: 50%;
+  }
+}
+
+.dropdown-footer {
+  padding: 8px;
+  text-align: center;
+  
+  .view-all-btn {
+    width: 100%;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+}
+
+.loading-state, .empty-state {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+
+  mat-icon { font-size: 32px; width: 32px; height: 32px; }
+  p { font-size: 14px; margin: 0; }
+}

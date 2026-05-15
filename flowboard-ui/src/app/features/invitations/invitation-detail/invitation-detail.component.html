@@ -1,0 +1,65 @@
+<section class="invite-page">
+  <button mat-button class="back-link" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Back to notifications
+  </button>
+
+  <mat-card class="invite-card">
+    <ng-container *ngIf="loading">
+      <div class="loading-state">
+        <mat-spinner diameter="36"></mat-spinner>
+        <p>Loading invitation details...</p>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="!loading && invitation as invite">
+      <div class="invite-hero">
+        <div class="invite-badge" [class.pending]="invite.status === 'PENDING'">
+          <mat-icon>{{ invite.status === 'PENDING' ? 'mail' : 'task_alt' }}</mat-icon>
+          <span>{{ invite.status }}</span>
+        </div>
+
+        <h1>{{ invite.workspaceName }}</h1>
+        <p>
+          {{ invite.inviterName }} invited you to join this workspace as
+          <strong>{{ invite.role }}</strong>.
+        </p>
+      </div>
+
+      <div class="invite-grid">
+        <div class="detail-row">
+          <span class="label">Inviter</span>
+          <span>{{ invite.inviterName }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Email</span>
+          <span>{{ invite.inviterEmail }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Sent</span>
+          <span>{{ invite.createdAt | date:'medium' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Expires</span>
+          <span>{{ invite.expiresAt | date:'medium' }}</span>
+        </div>
+      </div>
+
+      <div class="invite-note" *ngIf="!canRespond()">
+        <mat-icon>info</mat-icon>
+        <span>This invitation is already {{ invite.status.toLowerCase() }}.</span>
+      </div>
+
+      <div class="actions" *ngIf="canRespond()">
+        <button mat-flat-button color="primary" (click)="accept()" [disabled]="accepting || rejecting">
+          <mat-spinner *ngIf="accepting" diameter="18"></mat-spinner>
+          <span>{{ accepting ? 'Accepting...' : 'Accept Invitation' }}</span>
+        </button>
+        <button mat-stroked-button color="warn" (click)="reject()" [disabled]="accepting || rejecting">
+          <mat-spinner *ngIf="rejecting" diameter="18"></mat-spinner>
+          <span>{{ rejecting ? 'Ignoring...' : 'Ignore Invitation' }}</span>
+        </button>
+      </div>
+    </ng-container>
+  </mat-card>
+</section>

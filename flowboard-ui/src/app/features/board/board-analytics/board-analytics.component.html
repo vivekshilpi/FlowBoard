@@ -1,0 +1,95 @@
+<div class="analytics-container">
+  <div class="analytics-header">
+    <div class="header-info">
+      <mat-icon class="header-icon">analytics</mat-icon>
+      <h3>Board Analytics</h3>
+    </div>
+    <p class="header-subtitle">Insights and performance metrics for {{ board.name }}</p>
+  </div>
+
+  <mat-divider></mat-divider>
+
+  <!-- Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-info">
+        <span class="stat-label">Total Cards</span>
+        <span class="stat-value">{{ stats.total }}</span>
+      </div>
+      <div class="stat-icon-box"><mat-icon>credit_card</mat-icon></div>
+    </div>
+    
+    <div class="stat-card members">
+      <div class="stat-info">
+        <span class="stat-label">Collaborators</span>
+        <span class="stat-value">{{ board.memberCount }}</span>
+      </div>
+      <div class="stat-icon-box"><mat-icon>group</mat-icon></div>
+    </div>
+
+    <div class="stat-card overdue">
+      <div class="stat-info">
+        <span class="stat-label">Overdue</span>
+        <span class="stat-value">{{ stats.overdue }}</span>
+      </div>
+      <div class="stat-icon-box"><mat-icon>warning</mat-icon></div>
+    </div>
+  </div>
+
+  <!-- Progress Breakdown -->
+  <div class="breakdown-section">
+    <h4>Progress Breakdown</h4>
+    
+    <div class="breakdown-item">
+      <div class="item-header">
+        <span class="item-label">Done</span>
+        <span class="item-percentage">{{ getPercentage(stats.done) }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar done" [style.width.%]="getPercentage(stats.done)"></div>
+      </div>
+      <span class="item-meta">{{ stats.done }} of {{ stats.total }} cards completed</span>
+    </div>
+
+    <div class="breakdown-item">
+      <div class="item-header">
+        <span class="item-label">In Progress</span>
+        <span class="item-percentage">{{ getPercentage(stats.inProgress) }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar active" [style.width.%]="getPercentage(stats.inProgress)"></div>
+      </div>
+      <span class="item-meta">{{ stats.inProgress }} cards currently in work</span>
+    </div>
+
+    <div class="breakdown-item">
+      <div class="item-header">
+        <span class="item-label">To Do</span>
+        <span class="item-percentage">{{ getPercentage(stats.todo) }}%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-bar todo" [style.width.%]="getPercentage(stats.todo)"></div>
+      </div>
+      <span class="item-meta">{{ stats.todo }} cards waiting to start</span>
+    </div>
+  </div>
+
+  <!-- Member Roles -->
+  <div class="roles-section">
+    <h4>Team Composition</h4>
+    <div class="roles-grid">
+       <div class="role-stat">
+          <span class="role-val">{{ board.analytics.adminCount }}</span>
+          <span class="role-lab">Admins</span>
+       </div>
+       <div class="role-stat">
+          <span class="role-val">{{ board.analytics.memberCount }}</span>
+          <span class="role-lab">Members</span>
+       </div>
+       <div class="role-stat">
+          <span class="role-val">{{ board.analytics.observerCount }}</span>
+          <span class="role-lab">Observers</span>
+       </div>
+    </div>
+  </div>
+</div>

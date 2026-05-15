@@ -1,0 +1,89 @@
+.card-create-form {
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin: 0 8px 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding: 4px 6px;
+  font-family: inherit;
+
+  &::placeholder { color: var(--text-muted); }
+}
+
+.card-input--secondary {
+  margin-top: 6px;
+}
+
+.card-create-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.card-create-field {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.card-create-field select,
+.card-create-field input {
+  width: 100%;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  background: #fff;
+  color: var(--text-primary);
+}
+
+.card-label-picker {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.card-label-picker__title {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.card-label-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.card-label-pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 8px;
+  text-transform: capitalize;
+}
+
+.card-label-pill--active {
+  border-color: #111827;
+  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.12);
+}
+
+.card-create-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}

@@ -1,0 +1,83 @@
+<div class="search-container">
+  <div class="search-input-wrapper" [class.active]="showResults">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input type="text" [formControl]="searchControl" 
+           placeholder="Search boards, workspaces, or cards..."
+           (focus)="searchControl.value ? showResults = true : null"
+           (blur)="closeResults()">
+    <mat-spinner *ngIf="loading" diameter="20" class="search-spinner"></mat-spinner>
+  </div>
+
+  <div class="search-results" *ngIf="showResults">
+    
+    <!-- Loading -->
+    <div *ngIf="loading" class="results-loading">
+      Searching...
+    </div>
+
+    <!-- Results -->
+    <div *ngIf="!loading">
+      
+      <!-- Workspaces -->
+      <div class="result-section" *ngIf="workspaces.length > 0">
+        <h4 class="section-title">Workspaces</h4>
+        <div class="result-list">
+          <div *ngFor="let ws of workspaces" class="result-item" 
+               (click)="navigateTo('workspace', ws.id)">
+            <div class="result-avatar ws">
+              <mat-icon>group_work</mat-icon>
+            </div>
+            <div class="result-info">
+              <p class="result-name">{{ ws.name }}</p>
+              <p class="result-meta">{{ ws.visibility }} • {{ ws.members.length }} members</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Boards -->
+      <div class="result-section" *ngIf="boards.length > 0">
+        <h4 class="section-title">Boards</h4>
+        <div class="result-list">
+          <div *ngFor="let b of boards" class="result-item"
+               (click)="navigateTo('board', b.id)">
+            <div class="result-avatar board" 
+                 [style.background]="b.background || '#4f46e5'">
+              <mat-icon>dashboard</mat-icon>
+            </div>
+            <div class="result-info">
+              <p class="result-name">{{ b.name }}</p>
+              <p class="result-meta">{{ b.description || 'No description' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-section" *ngIf="cards.length > 0">
+        <h4 class="section-title">Cards</h4>
+        <div class="result-list">
+          <div *ngFor="let card of cards" class="result-item"
+               (click)="navigateTo('card', card.id, card.boardId)">
+            <div class="result-avatar card"
+                 [style.background]="card.coverColor || '#0f766e'">
+              <mat-icon>task_alt</mat-icon>
+            </div>
+            <div class="result-info">
+              <p class="result-name">{{ card.title }}</p>
+              <p class="result-meta">
+                {{ card.priority }} • {{ card.labels?.join(', ') || 'No labels' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No results -->
+      <div class="no-results" *ngIf="workspaces.length === 0 && boards.length === 0 && cards.length === 0">
+        <mat-icon>search_off</mat-icon>
+        <p>No matches found for "{{ searchControl.value }}"</p>
+      </div>
+
+    </div>
+  </div>
+</div>

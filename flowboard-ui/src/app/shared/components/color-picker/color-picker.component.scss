@@ -1,0 +1,55 @@
+.color-picker-menu {
+  padding: 8px !important;
+  border-radius: 12px;
+}
+
+::ng-deep .color-picker-menu {
+  .mat-mdc-menu-content {
+    padding: 8px !important;
+  }
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 8px;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border: 2px solid transparent;
+
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  &.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+
+  mat-icon {
+    color: white;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  }
+}
+
+.color-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}

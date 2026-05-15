@@ -1,0 +1,256 @@
+<div class="profile-page page-shell page-enter" *ngIf="user">
+  <header class="profile-page__header page-shell__hero">
+    <div class="profile-page__title-wrap page-shell__copy">
+      <button mat-icon-button routerLink="/dashboard" class="btn btn-ghost btn-icon">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <span class="page-shell__eyebrow">Account</span>
+        <h1>Account Settings</h1>
+        <p>Manage your profile, avatar, and password in one place.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-page__content">
+    <aside class="profile-summary card">
+      <div class="profile-summary__avatar-box">
+        <div *ngIf="!getHeaderAvatarUrl()" class="profile-summary__avatar" [style.background]="'hsl(' + (user.id * 47 % 360) + ',60%,50%)'">
+          {{ getInitials() }}
+        </div>
+        <img *ngIf="getHeaderAvatarUrl()" [src]="getHeaderAvatarUrl()" class="profile-summary__avatar-image" alt="Avatar" />
+      </div>
+
+      <div class="profile-summary__meta">
+        <h2>{{ user.fullName }}</h2>
+        <p>{{ '@' + user.username }}</p>
+        <span class="badge badge-review">{{ user.role }}</span>
+        <span class="plan-pill" *ngIf="subscription as currentSubscription">
+          {{ currentSubscription.planDisplayName }} Plan
+        </span>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="profile-summary__facts">
+        <div class="profile-summary__fact">
+          <mat-icon>email</mat-icon>
+          <span>{{ user.email }}</span>
+        </div>
+        <div class="profile-summary__fact">
+          <mat-icon>event</mat-icon>
+          <span>Joined {{ user.createdAt | date:'MMM yyyy' }}</span>
+        </div>
+        <div class="profile-summary__fact" *ngIf="subscription as currentSubscription">
+          <mat-icon>workspace_premium</mat-icon>
+          <span>
+            {{ currentSubscription.status === 'ACTIVE' ? currentSubscription.planDisplayName + ' active' : currentSubscription.planDisplayName + ' ' + (currentSubscription.status | lowercase) }}
+          </span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="profile-sections">
+      <div class="profile-pagination card page-surface">
+        <div>
+          <h3>{{ currentPage === 1 ? 'Profile Details' : 'Security & Activity' }}</h3>
+          <p>{{ currentPage === 1 ? 'Edit your personal info, avatar, and bio.' : 'Manage password changes and review recent account activity.' }}</p>
+        </div>
+
+        <div class="profile-pagination__controls">
+          <button mat-button type="button" class="btn btn-ghost" (click)="previousPage()" [disabled]="currentPage === 1">
+            Previous
+          </button>
+          <span class="profile-pagination__status">Page {{ currentPage }} of {{ totalPages }}</span>
+          <button mat-flat-button type="button" class="btn btn-secondary" (click)="nextPage()" [disabled]="currentPage === totalPages">
+            Next
+          </button>
+        </div>
+      </div>
+
+      <section class="card profile-section" *ngIf="currentPage === 1">
+        <div class="profile-section__header">
+          <mat-icon>person_outline</mat-icon>
+          <div>
+            <h3>Personal Information</h3>
+            <p>Update your public details and how teammates see you.</p>
+          </div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="field-stack">
+          <div class="profile-form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <mat-form-field appearance="outline">
+                <input matInput formControlName="fullname" placeholder="Alice Smith" />
+                <mat-icon matPrefix>badge</mat-icon>
+                <mat-error *ngIf="profileForm.get('fullname')?.hasError('required')">
+                  Full name is required.
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <mat-form-field appearance="outline">
+                <input matInput formControlName="username" placeholder="alicesmith" />
+                <mat-icon matPrefix>alternate_email</mat-icon>
+                <mat-error *ngIf="profileForm.get('username')?.hasError('minlength')">
+                  Username must be at least 3 characters.
+                </mat-error>
+                <mat-error *ngIf="profileForm.get('username')?.hasError('pattern')">
+                  Use letters, numbers, dots, underscores, or hyphens only.
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Avatar</label>
+            <div class="avatar-upload card">
+              <div class="avatar-upload__preview">
+                <div *ngIf="!getAvatarUrl()" class="profile-summary__avatar" [style.background]="'hsl(' + (user.id * 47 % 360) + ',60%,50%)'">
+                  {{ getInitials() }}
+                </div>
+                <img *ngIf="getAvatarUrl()" [src]="getAvatarUrl()" class="profile-summary__avatar-image" alt="Avatar preview" />
+              </div>
+
+              <div class="avatar-upload__content">
+                <p>Upload a JPG or PNG image up to 2 MB.</p>
+                <div class="avatar-upload__actions">
+                  <label class="btn btn-secondary avatar-upload__button">
+                    <input type="file" accept="image/png,image/jpeg" (change)="onAvatarSelected($event)" />
+                    Choose Image
+                  </label>
+                  <button *ngIf="selectedAvatarFile" mat-button type="button" class="btn btn-ghost" (click)="clearSelectedAvatar()">
+                    Remove Selection
+                  </button>
+                </div>
+                <small *ngIf="selectedAvatarFile">{{ selectedAvatarFile.name }}</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Bio</label>
+            <mat-form-field appearance="outline">
+              <textarea matInput formControlName="bio" rows="3" placeholder="Tell us a bit about yourself..."></textarea>
+              <mat-icon matPrefix>notes</mat-icon>
+              <mat-hint align="end">{{ profileForm.get('bio')?.value?.length || 0 }}/280</mat-hint>
+              <mat-error *ngIf="profileForm.get('bio')?.hasError('maxlength')">
+                Bio must be 280 characters or less.
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="profile-section__actions">
+            <button mat-flat-button class="btn btn-primary" type="submit" [disabled]="savingProfile || (!hasProfileChanges() && !selectedAvatarFile)">
+              <mat-spinner *ngIf="savingProfile" diameter="18"></mat-spinner>
+              {{ savingProfile ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card profile-section" *ngIf="currentPage === 2">
+        <div class="profile-section__header">
+          <mat-icon>security</mat-icon>
+          <div>
+            <h3>Security & Password</h3>
+            <p>Change your password to keep your account secure.</p>
+          </div>
+        </div>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="field-stack">
+          <div class="profile-form-grid">
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <mat-form-field appearance="outline">
+                <input matInput [type]="hideOld ? 'password' : 'text'" formControlName="oldPassword" placeholder="Enter current password" />
+                <button mat-icon-button matSuffix (click)="hideOld = !hideOld" type="button">
+                  <mat-icon>{{ hideOld ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="passwordForm.get('oldPassword')?.hasError('required')">
+                  Current password is required.
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <mat-form-field appearance="outline">
+                <input matInput [type]="hideNew ? 'password' : 'text'" formControlName="newPassword" placeholder="Enter new password" />
+                <button mat-icon-button matSuffix (click)="hideNew = !hideNew" type="button">
+                  <mat-icon>{{ hideNew ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+                <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('minlength')">
+                  Use at least 8 characters.
+                </mat-error>
+                <mat-error *ngIf="passwordForm.get('newPassword')?.hasError('pattern')">
+                  Include uppercase, lowercase, number, and special character.
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Confirm Password</label>
+              <mat-form-field appearance="outline">
+                <input matInput type="password" formControlName="confirmPassword" placeholder="Confirm new password" />
+                <mat-error *ngIf="passwordForm.get('confirmPassword')?.hasError('required')">
+                  Please confirm your new password.
+                </mat-error>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <p class="form-error" *ngIf="passwordForm.hasError('passwordMismatch')">
+            New password and confirm password must match.
+          </p>
+
+          <p class="form-error" *ngIf="passwordForm.hasError('sameAsCurrent')">
+            New password must be different from your current password.
+          </p>
+
+          <div class="profile-section__actions">
+            <button mat-flat-button class="btn btn-danger" type="submit" [disabled]="savingPassword || passwordForm.invalid">
+              <mat-spinner *ngIf="savingPassword" diameter="18"></mat-spinner>
+              {{ savingPassword ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card profile-section" *ngIf="currentPage === 2">
+        <div class="profile-section__header">
+          <mat-icon>history</mat-icon>
+          <div>
+            <h3>Profile Activity</h3>
+            <p>Recent profile and security changes are stored here for auditability. Showing the latest 20 entries.</p>
+          </div>
+        </div>
+
+        <div class="activity-log" *ngIf="!activityLoading && activityLog.length > 0; else activityState">
+          <div class="activity-log__item" *ngFor="let entry of activityLog">
+            <div class="activity-log__dot"></div>
+            <div class="activity-log__content">
+              <p class="activity-log__summary">{{ entry.summary }}</p>
+              <span class="activity-log__meta">{{ entry.action }} • {{ entry.createdAt | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #activityState>
+          <div class="activity-log__empty">
+            <mat-spinner *ngIf="activityLoading" diameter="24"></mat-spinner>
+            <p *ngIf="!activityLoading">No profile activity yet.</p>
+          </div>
+        </ng-template>
+      </section>
+    </main>
+  </div>
+
+  <div class="loading-overlay" *ngIf="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading your profile...</p>
+  </div>
+</div>

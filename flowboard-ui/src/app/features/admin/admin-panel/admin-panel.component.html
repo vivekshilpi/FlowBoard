@@ -1,0 +1,474 @@
+<section class="admin-page page-shell page-shell--wide page-enter">
+  <header class="admin-hero page-shell__hero">
+    <div class="admin-hero__shell">
+      <aside class="admin-hero__rail">
+        <p class="admin-hero__label">Platform Admin</p>
+        <h2>Platform control</h2>
+        <p>Review users, workspaces, boards, SLA risk, reporting, and platform-wide operational health from one command center.</p>
+      </aside>
+
+      <div class="admin-hero__main">
+        <div class="admin-hero__headline">
+          <span class="page-shell__eyebrow">Platform Administrator</span>
+          <h1>Platform Administration</h1>
+          <p>Manage user accounts, workspace integrity, audit visibility, reports, broadcasts, and overdue execution risk across FlowBoard.</p>
+        </div>
+
+        <section class="admin-summary-grid stagger-children" *ngIf="summaryCards$ | async as summaryCards">
+          <article *ngFor="let item of summaryCards" class="admin-summary-card" [class.admin-summary-card--danger]="item.tone === 'danger'">
+            <div class="admin-summary-card__icon">
+              <mat-icon>{{ item.icon }}</mat-icon>
+            </div>
+            <div class="admin-summary-card__value">{{ item.value }}</div>
+            <p class="admin-summary-card__label">{{ item.label }}</p>
+            <span class="admin-summary-card__helper">{{ item.helper }}</span>
+          </article>
+        </section>
+      </div>
+    </div>
+  </header>
+
+  <section class="admin-overview-grid">
+    <article class="page-surface admin-ops-card" *ngIf="workspaceInsights$ | async as insights">
+      <div class="admin-panel-heading">
+        <div>
+          <span class="admin-panel-heading__eyebrow">Workspace Health</span>
+          <h3>Platform-wide operating signals</h3>
+        </div>
+      </div>
+
+      <div class="admin-kpi-list">
+        <div class="admin-kpi">
+          <span class="admin-kpi__label">Avg boards per workspace</span>
+          <strong>{{ insights.avgBoardsPerWorkspace }}</strong>
+        </div>
+        <div class="admin-kpi">
+          <span class="admin-kpi__label">Public workspace exposure</span>
+          <strong>{{ insights.publicExposure }}%</strong>
+        </div>
+        <div class="admin-kpi" *ngIf="insights.largestWorkspace as largestWorkspace">
+          <span class="admin-kpi__label">Largest team</span>
+          <strong>{{ largestWorkspace.name }}</strong>
+          <span class="admin-kpi__meta">{{ largestWorkspace.members.length }} members</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="page-surface admin-ops-card">
+      <div class="admin-panel-heading">
+        <div>
+          <span class="admin-panel-heading__eyebrow">Broadcast</span>
+          <h3>Prepare platform communication</h3>
+        </div>
+      </div>
+
+      <div class="field-stack admin-broadcast-form">
+        <div class="form-group">
+          <label class="form-label">Audience</label>
+          <mat-form-field appearance="outline">
+            <mat-select [(ngModel)]="broadcastAudience" name="broadcastAudience">
+              <mat-option value="all-users">All users</mat-option>
+              <mat-option value="active-users">Active users</mat-option>
+              <mat-option value="workspace-owners">Workspace owners</mat-option>
+              <mat-option value="platform-admins">Platform admins</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <mat-form-field appearance="outline">
+            <textarea
+              matInput
+              [(ngModel)]="broadcastMessage"
+              name="broadcastMessage"
+              rows="4"
+              placeholder="Write a platform update, maintenance notice, or targeted operational alert."
+            ></textarea>
+          </mat-form-field>
+        </div>
+
+        <div class="admin-broadcast-form__actions">
+          <button type="button" class="btn btn-primary" (click)="prepareBroadcast()">
+            <mat-icon>campaign</mat-icon>
+            Prepare Broadcast
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <article class="page-surface admin-ops-card">
+      <div class="admin-panel-heading">
+        <div>
+          <span class="admin-panel-heading__eyebrow">Activity Reports</span>
+          <h3>Export operational data</h3>
+        </div>
+      </div>
+
+      <div class="admin-report-actions">
+        <button type="button" class="btn btn-secondary" (click)="exportUsers(users)">
+          <mat-icon>download</mat-icon>
+          Users CSV
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="exportWorkspaces(workspaces)">
+          <mat-icon>download</mat-icon>
+          Workspaces CSV
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="exportBoards(boards)">
+          <mat-icon>download</mat-icon>
+          Boards CSV
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <section class="admin-overview-grid admin-overview-grid--secondary">
+    <article class="page-surface admin-activity-card">
+      <div class="admin-panel-heading">
+        <div>
+          <span class="admin-panel-heading__eyebrow">Audit Stream</span>
+          <h3>Recent platform activity</h3>
+        </div>
+      </div>
+
+      <div class="admin-activity-feed" *ngIf="platformActivity$ | async as activity">
+        <article *ngFor="let item of activity" class="admin-activity-item">
+          <span class="admin-activity-item__dot" [class.admin-activity-item__dot--risk]="item.type === 'risk'"></span>
+          <div class="admin-activity-item__content">
+            <p class="admin-activity-item__title">{{ item.title }}</p>
+            <p>{{ item.description }}</p>
+          </div>
+          <span class="admin-activity-item__time">{{ item.timestamp | date:'MMM d, h:mm a' }}</span>
+        </article>
+      </div>
+    </article>
+
+    <article class="page-surface admin-overdue-card">
+      <div class="admin-panel-heading">
+        <div>
+          <span class="admin-panel-heading__eyebrow">SLA Monitoring</span>
+          <h3>Overdue cards across the platform</h3>
+        </div>
+      </div>
+
+      <div class="admin-overdue-list" *ngIf="overdueCardsWithContext$ | async as overdueCards">
+        <article *ngFor="let card of overdueCards" class="admin-overdue-item">
+          <div class="admin-overdue-item__content">
+            <p class="admin-overdue-item__title">{{ card.title }}</p>
+            <p>{{ card.boardName }} · {{ card.workspaceName }}</p>
+          </div>
+          <div class="admin-overdue-item__meta">
+            <span class="badge badge-critical">{{ card.priority | titlecase }}</span>
+            <span class="admin-overdue-item__date">{{ card.dueDate | date:'MMM d' }}</span>
+          </div>
+        </article>
+
+        <div *ngIf="overdueCards.length === 0" class="empty-state-panel empty-state-panel--compact">
+          <mat-icon>task_alt</mat-icon>
+          <h3>No overdue cards</h3>
+          <p>Platform-wide SLA monitoring is clear right now.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="page-surface admin-data-hub">
+    <div class="admin-data-hub__header">
+      <div>
+        <span class="admin-panel-heading__eyebrow">Data Hub</span>
+        <h2>Users, workspaces, boards, and analytics</h2>
+        <p>Review and manage all platform entities from a single operator surface.</p>
+      </div>
+    </div>
+
+    <mat-tab-group class="modern-tabs">
+      <mat-tab label="User Accounts">
+        <section class="admin-table-panel">
+          <div class="admin-table-panel__toolbar">
+            <div>
+              <h3>All user accounts</h3>
+              <p>Suspend, reactivate, or remove accounts while preserving admin safeguards.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="exportUsers(users)">
+              <mat-icon>download</mat-icon>
+              Export Users
+            </button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table mat-table [dataSource]="(users$ | async) || []" class="admin-table">
+              <ng-container matColumnDef="avatar">
+                <th mat-header-cell *matHeaderCellDef>User</th>
+                <td mat-cell *matCellDef="let user">
+                  <div class="avatar avatar-md admin-avatar">{{ getUserInitials(user.fullName) }}</div>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Full Name</th>
+                <td mat-cell *matCellDef="let user">{{ user.fullName }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef>Email Address</th>
+                <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let user">
+                  <span class="badge" [ngClass]="user.active ? 'badge-done' : 'badge-backlog'">
+                    {{ user.active ? 'Active' : 'Suspended' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="role">
+                <th mat-header-cell *matHeaderCellDef>Role</th>
+                <td mat-cell *matCellDef="let user">
+                  <span class="badge" [ngClass]="user.role === 'PLATFORM_ADMIN' ? 'badge-review' : 'badge-todo'">
+                    {{ user.role }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let user">
+                  <button type="button" [matMenuTriggerFor]="userActions" class="btn btn-ghost btn-icon" [disabled]="!canManageUser(user.id)">
+                    <mat-icon>more_horiz</mat-icon>
+                  </button>
+                  <mat-menu #userActions="matMenu">
+                    <button mat-menu-item (click)="changeRole(user.id, 'PLATFORM_ADMIN')" [disabled]="user.role === 'PLATFORM_ADMIN'">
+                      Make Admin
+                    </button>
+                    <button mat-menu-item (click)="changeRole(user.id, 'MEMBER')" [disabled]="user.role === 'MEMBER'">
+                      Make Member
+                    </button>
+                    <mat-divider></mat-divider>
+                    <button mat-menu-item *ngIf="user.active" (click)="suspend(user.id)">
+                      <mat-icon>block</mat-icon>
+                      Suspend
+                    </button>
+                    <button mat-menu-item *ngIf="!user.active" (click)="reactivate(user.id)">
+                      <mat-icon>restart_alt</mat-icon>
+                      Reactivate
+                    </button>
+                    <button mat-menu-item class="delete-item" (click)="delete(user.id)">
+                      <mat-icon>delete</mat-icon>
+                      Delete
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="userColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: userColumns;"></tr>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Workspaces">
+        <section class="admin-table-panel">
+          <div class="admin-table-panel__toolbar">
+            <div>
+              <h3>All workspaces</h3>
+              <p>Track workspace ownership, visibility, team size, and removal actions.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="exportWorkspaces(workspaces)">
+              <mat-icon>download</mat-icon>
+              Export Workspaces
+            </button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table mat-table [dataSource]="(workspaces$ | async) || []" class="admin-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Workspace</th>
+                <td mat-cell *matCellDef="let workspace">
+                  <a [routerLink]="['/workspace', workspace.id]" class="admin-table__link">
+                    {{ workspace.name }}
+                  </a>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="owner">
+                <th mat-header-cell *matHeaderCellDef>Owner</th>
+                <td mat-cell *matCellDef="let workspace">User #{{ workspace.ownerId }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="visibility">
+                <th mat-header-cell *matHeaderCellDef>Visibility</th>
+                <td mat-cell *matCellDef="let workspace">
+                  <span class="badge" [ngClass]="workspace.visibility === 'PUBLIC' ? 'badge-done' : 'badge-todo'">
+                    {{ workspace.visibility }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="members">
+                <th mat-header-cell *matHeaderCellDef>Members</th>
+                <td mat-cell *matCellDef="let workspace">{{ workspace.members.length }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="updatedAt">
+                <th mat-header-cell *matHeaderCellDef>Updated</th>
+                <td mat-cell *matCellDef="let workspace">{{ (workspace.updatedAt || workspace.createdAt) | date:'medium' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let workspace">
+                  <button type="button" [matMenuTriggerFor]="workspaceActions" class="btn btn-ghost btn-icon">
+                    <mat-icon>more_horiz</mat-icon>
+                  </button>
+                  <mat-menu #workspaceActions="matMenu">
+                    <a mat-menu-item [routerLink]="['/workspace', workspace.id]">
+                      <mat-icon>open_in_new</mat-icon>
+                      Open Workspace
+                    </a>
+                    <button mat-menu-item class="delete-item" (click)="deleteWorkspace(workspace.id)">
+                      <mat-icon>delete</mat-icon>
+                      Delete Workspace
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="workspaceColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: workspaceColumns;"></tr>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Boards">
+        <section class="admin-table-panel">
+          <div class="admin-table-panel__toolbar">
+            <div>
+              <h3>All boards</h3>
+              <p>Monitor board visibility, status, workspace mapping, and closure state.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="exportBoards(boards)">
+              <mat-icon>download</mat-icon>
+              Export Boards
+            </button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table mat-table [dataSource]="(boards$ | async) || []" class="admin-table">
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>Board</th>
+                <td mat-cell *matCellDef="let board">
+                  <a [routerLink]="['/board', board.id]" class="admin-table__link">
+                    {{ board.name }}
+                  </a>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="workspace">
+                <th mat-header-cell *matHeaderCellDef>Workspace</th>
+                <td mat-cell *matCellDef="let board">#{{ board.workspaceId }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="visibility">
+                <th mat-header-cell *matHeaderCellDef>Visibility</th>
+                <td mat-cell *matCellDef="let board">
+                  <span class="badge" [ngClass]="board.visibility === 'PUBLIC' ? 'badge-done' : 'badge-todo'">
+                    {{ board.visibility }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="status">
+                <th mat-header-cell *matHeaderCellDef>Status</th>
+                <td mat-cell *matCellDef="let board">
+                  <span class="badge" [ngClass]="board.isClosed ? 'badge-backlog' : 'badge-review'">
+                    {{ board.isClosed ? 'Closed' : 'Open' }}
+                  </span>
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="members">
+                <th mat-header-cell *matHeaderCellDef>Members</th>
+                <td mat-cell *matCellDef="let board">{{ board.memberCount }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="updatedAt">
+                <th mat-header-cell *matHeaderCellDef>Updated</th>
+                <td mat-cell *matCellDef="let board">{{ (board.updatedAt || board.createdAt) | date:'medium' }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>Actions</th>
+                <td mat-cell *matCellDef="let board">
+                  <button type="button" [matMenuTriggerFor]="boardActions" class="btn btn-ghost btn-icon">
+                    <mat-icon>more_horiz</mat-icon>
+                  </button>
+                  <mat-menu #boardActions="matMenu">
+                    <a mat-menu-item [routerLink]="['/board', board.id]">
+                      <mat-icon>open_in_new</mat-icon>
+                      Open Board
+                    </a>
+                    <button mat-menu-item *ngIf="!board.isClosed" (click)="closeBoard(board.id)">
+                      <mat-icon>lock</mat-icon>
+                      Close Board
+                    </button>
+                    <button mat-menu-item *ngIf="board.isClosed" (click)="reopenBoard(board.id)">
+                      <mat-icon>lock_open</mat-icon>
+                      Reopen Board
+                    </button>
+                    <button mat-menu-item class="delete-item" (click)="deleteBoard(board.id)">
+                      <mat-icon>delete</mat-icon>
+                      Delete Board
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="boardColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: boardColumns;"></tr>
+            </table>
+          </div>
+        </section>
+      </mat-tab>
+
+      <mat-tab label="Analytics">
+        <section class="analytics-grid" *ngIf="stats$ | async as stats">
+          <article class="analytics-card">
+            <h4>Users</h4>
+            <dl class="analytics-list">
+              <div><dt>Total users</dt><dd>{{ stats.totalUsers }}</dd></div>
+              <div><dt>Active accounts</dt><dd>{{ stats.activeUsers }}</dd></div>
+              <div><dt>Suspended accounts</dt><dd>{{ stats.suspendedUsers }}</dd></div>
+              <div><dt>Platform admins</dt><dd>{{ stats.platformAdmins }}</dd></div>
+              <div><dt>Members</dt><dd>{{ stats.members }}</dd></div>
+              <div><dt>Logged in past 24h</dt><dd>{{ stats.activeUsersToday }}</dd></div>
+            </dl>
+          </article>
+
+          <article class="analytics-card">
+            <h4>Workspaces</h4>
+            <dl class="analytics-list">
+              <div><dt>Total workspaces</dt><dd>{{ stats.totalWorkspaces }}</dd></div>
+              <div><dt>Public</dt><dd>{{ stats.publicWorkspaces }}</dd></div>
+              <div><dt>Private</dt><dd>{{ stats.privateWorkspaces }}</dd></div>
+            </dl>
+          </article>
+
+          <article class="analytics-card">
+            <h4>Boards</h4>
+            <dl class="analytics-list">
+              <div><dt>Total boards</dt><dd>{{ stats.totalBoards }}</dd></div>
+              <div><dt>Open boards</dt><dd>{{ stats.openBoards }}</dd></div>
+              <div><dt>Closed boards</dt><dd>{{ stats.closedBoards }}</dd></div>
+              <div><dt>Public</dt><dd>{{ stats.publicBoards }}</dd></div>
+              <div><dt>Private</dt><dd>{{ stats.privateBoards }}</dd></div>
+            </dl>
+          </article>
+        </section>
+      </mat-tab>
+    </mat-tab-group>
+  </section>
+</section>

@@ -1,0 +1,75 @@
+<div class="auth-screen">
+  <section class="auth-screen__hero">
+    <div class="auth-screen__hero-content">
+      <span class="auth-screen__brand-mark">FlowBoard</span>
+      <h1 class="auth-screen__brand-title">Organize work with calm, clarity, and momentum.</h1>
+      <p class="auth-screen__brand-copy">
+        Bring boards, tasks, and collaboration into one focused workspace designed for teams that move fast.
+      </p>
+    </div>
+  </section>
+
+  <section class="auth-screen__panel">
+    <div class="auth-form-shell auth-form-shell--login page-enter">
+      <div class="auth-form-shell__header">
+        <span class="auth-form-shell__eyebrow">Welcome back</span>
+        <h1>Sign in to your workspace</h1>
+        <p>Pick up where your team left off.</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="auth-alert auth-alert--danger">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="field-stack field-stack--auth">
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <mat-form-field appearance="outline">
+            <input matInput formControlName="email" type="email" placeholder="you&#64;example.com" />
+            <mat-error *ngIf="email.hasError('required')">Email is required</mat-error>
+            <mat-error *ngIf="email.hasError('email')">Enter a valid email</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <mat-form-field appearance="outline">
+            <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Enter your password" />
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="password.hasError('required')">Password is required</mat-error>
+            <mat-error *ngIf="password.hasError('minlength')">Minimum 6 characters</mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="auth-form-shell__meta">
+          <button type="button" class="auth-link-button" (click)="goToForgotPassword()">Forgot password?</button>
+        </div>
+
+        <button mat-flat-button class="btn btn-primary btn-lg auth-submit" type="submit" [disabled]="loading || form.invalid">
+          <mat-spinner *ngIf="loading" diameter="18"></mat-spinner>
+          {{ loading ? 'Signing in...' : 'Sign in' }}
+        </button>
+      </form>
+
+      <div class="auth-divider"><span>or</span></div>
+
+      <a class="auth-social-btn" href="http://localhost:8081/oauth2/authorization/google">
+        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" />
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
+          <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" />
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" />
+        </svg>
+        Continue with Google
+      </a>
+
+      <p class="auth-form-shell__footer">
+        Don't have an account?
+        <a routerLink="/register">Create one</a>
+      </p>
+    </div>
+  </section>
+</div>

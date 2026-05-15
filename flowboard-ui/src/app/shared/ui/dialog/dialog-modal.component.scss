@@ -1,0 +1,201 @@
+:host {
+  display: block;
+}
+
+.fb-dialog {
+  position: relative;
+  width: min(100%, 100vw - 32px);
+}
+
+.fb-dialog__surface {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--fb-border-strong) 72%, transparent);
+  border-radius: var(--fb-r-3xl);
+  background:
+    radial-gradient(circle at top right, rgba(var(--fb-accent-rgb), 0.12), transparent 36%),
+    linear-gradient(180deg, color-mix(in srgb, var(--fb-bg-surface) 94%, transparent) 0%, color-mix(in srgb, var(--fb-bg-surface-strong) 96%, transparent) 100%);
+  box-shadow: var(--fb-shadow-xl);
+  backdrop-filter: blur(22px);
+  padding: 28px;
+  animation: fb-dialog-enter var(--fb-dur-slow) var(--fb-ease-spring);
+}
+
+.fb-dialog__surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(var(--fb-white-rgb), 0.12) 0%, transparent 34%);
+  opacity: 0.7;
+}
+
+.fb-dialog__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+}
+
+.fb-dialog__header,
+.fb-dialog__body,
+.fb-dialog__actions,
+.fb-dialog__feedback {
+  position: relative;
+  z-index: 1;
+}
+
+.fb-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.fb-dialog__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  border: 1px solid var(--fb-accent-border);
+  background: var(--fb-accent-soft);
+  color: var(--fb-accent);
+  box-shadow: var(--fb-shadow-sm);
+  flex-shrink: 0;
+}
+
+.fb-dialog__icon .mat-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+.fb-dialog__copy {
+  display: grid;
+  gap: 8px;
+  padding-right: 44px;
+}
+
+.fb-dialog__title {
+  font-size: clamp(1.18rem, 1rem + 0.45vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--fb-text-primary);
+}
+
+.fb-dialog__description {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--fb-text-secondary);
+}
+
+.fb-dialog__body {
+  margin-top: 22px;
+}
+
+.fb-dialog__field-label {
+  display: inline-flex;
+  margin-bottom: 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fb-text-muted);
+}
+
+.fb-dialog__input {
+  height: 46px;
+  font-size: 0.95rem;
+}
+
+.fb-dialog__input--multiline {
+  min-height: 132px;
+}
+
+.fb-dialog__feedback {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--fb-danger-border);
+  border-radius: var(--fb-r-lg);
+  background: var(--fb-danger-bg);
+  color: var(--fb-danger-text);
+  font-size: 0.86rem;
+}
+
+.fb-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.fb-dialog__spinner {
+  --mdc-circular-progress-active-indicator-color: currentColor;
+}
+
+.fb-dialog--danger .fb-dialog__icon,
+.fb-dialog--error .fb-dialog__icon {
+  background: var(--fb-danger-bg);
+  border-color: var(--fb-danger-border);
+  color: var(--fb-danger-text);
+}
+
+.fb-dialog--success .fb-dialog__icon {
+  background: var(--fb-success-bg);
+  border-color: var(--fb-success-border);
+  color: var(--fb-success-text);
+}
+
+.fb-dialog--warning .fb-dialog__icon {
+  background: var(--fb-warning-bg);
+  border-color: var(--fb-warning-border);
+  color: var(--fb-warning-text);
+}
+
+.fb-dialog--info .fb-dialog__icon {
+  background: var(--fb-info-bg);
+  border-color: var(--fb-info-border);
+  color: var(--fb-info-text);
+}
+
+@keyframes fb-dialog-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .fb-dialog__surface {
+    border-radius: 22px;
+    padding: 22px 18px 18px;
+  }
+
+  .fb-dialog__header {
+    gap: 14px;
+  }
+
+  .fb-dialog__icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+
+  .fb-dialog__copy {
+    padding-right: 24px;
+  }
+
+  .fb-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .fb-dialog__actions .btn {
+    width: 100%;
+  }
+}

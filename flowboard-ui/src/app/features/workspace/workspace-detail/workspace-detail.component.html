@@ -1,0 +1,290 @@
+<div class="workspace-layout">
+
+  <!-- Header -->
+  <div class="ws-header">
+    <div class="header-main-info">
+      <button mat-icon-button (click)="goBack()" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+
+      <div class="ws-header-info" *ngIf="workspace">
+        <div class="ws-header-avatar"
+             [style.background]="'hsl(' + (workspace.id * 47 % 360) + ',60%,50%)'">
+          {{ getInitials(workspace.name) }}
+        </div>
+        <div class="ws-titles">
+          <h1 class="ws-header-title">{{ workspace.name }}</h1>
+          <div class="ws-header-badges">
+            <span class="ws-header-badge" [class.bg-success]="workspace.visibility === 'PUBLIC'">
+              <mat-icon> {{ workspace.visibility === 'PUBLIC' ? 'public' : 'lock' }} </mat-icon>
+              {{ workspace.visibility | titlecase }}
+            </span>
+            <span class="ws-header-badge bg-primary">
+              <mat-icon>group</mat-icon>
+              {{ workspace.members.length }} members
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ws-header-actions" *ngIf="workspace">
+      <button mat-flat-button class="btn btn-primary create-btn" (click)="activeTab = 'boards'; showCreateBoard = true">
+        <mat-icon>add</mat-icon>
+        New Board
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs Navigation -->
+  <div class="ws-tabs">
+    <button class="tab-btn" [class.active]="activeTab === 'boards'"
+            (click)="activeTab = 'boards'">
+      <mat-icon>dashboard</mat-icon> Boards
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'members'"
+            (click)="activeTab = 'members'; loadInvitations()">
+      <mat-icon>group</mat-icon> Members
+    </button>
+    <button class="tab-btn" *ngIf="isWorkspaceAdmin()" [class.active]="activeTab === 'settings'"
+            (click)="activeTab = 'settings'">
+      <mat-icon>settings</mat-icon> Settings
+    </button>
+  </div>
+
+  <div class="ws-content">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="loading-state">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+
+    <!-- BOARDS TAB -->
+    <ng-container *ngIf="!loading && activeTab === 'boards'">
+      
+      <!-- Create board form -->
+      <div *ngIf="showCreateBoard" class="create-board-form">
+        <h3>Create a board</h3>
+        <form [formGroup]="boardForm" (ngSubmit)="createBoard()" class="field-stack">
+          <div class="form-row">
+            <div class="flex-1">
+              <label class="form-label">Board name</label>
+              <mat-form-field appearance="outline" class="full-width">
+                <input matInput formControlName="name" placeholder="Sprint Board" />
+              </mat-form-field>
+            </div>
+
+            <div>
+              <label class="form-label">Visibility</label>
+              <mat-form-field appearance="outline">
+                <mat-select formControlName="visibility">
+                  <mat-option value="PRIVATE">Private</mat-option>
+                  <mat-option value="PUBLIC">Public</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </div>
+
+          <div>
+            <label class="form-label">Description</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <textarea matInput formControlName="description" rows="2"></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row-2 align-center">
+            <div class="color-picker-group">
+               <label>Board Theme</label>
+               <input type="color" formControlName="background" class="modern-color-input" />
+            </div>
+            <div class="spacer"></div>
+            <div class="form-actions">
+              <button mat-button type="button" class="btn btn-ghost" (click)="showCreateBoard = false">Cancel</button>
+              <button mat-flat-button type="submit" class="btn btn-primary" [disabled]="creatingBoard || boardForm.invalid">
+                {{ creatingBoard ? 'Creating...' : 'Create board' }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Boards grid -->
+      <div *ngIf="boards.length > 0" class="boards-grid">
+        <div *ngFor="let board of boards" class="board-card" 
+             [class.closed]="board.isClosed" (click)="openBoard(board.id)"
+             [style.border-top-color]="board.background || 'var(--fb-accent)'">
+          <div class="board-card-top">
+            <div class="board-cover" [style.background]="board.background || 'var(--fb-accent)'"></div>
+          </div>
+          <div class="board-card-body">
+            <div class="board-name-row">
+              <h3 class="board-name truncate">{{ board.name }}</h3>
+              <div class="board-name-actions" *ngIf="canManageBoard(board)">
+                <app-color-picker [selectedColor]="board.background || null" (colorChange)="updateBoardColor(board, $event)"></app-color-picker>
+                <button mat-icon-button class="board-menu" [matMenuTriggerFor]="boardMenu" (click)="$event.stopPropagation()">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+              </div>
+            </div>
+            <mat-menu #boardMenu="matMenu" class="modern-menu">
+              <button mat-menu-item (click)="openBoard(board.id)"><mat-icon>open_in_new</mat-icon> Open</button>
+              <button mat-menu-item class="delete-item" (click)="deleteBoard(board.id, $event)"><mat-icon>delete</mat-icon> Delete</button>
+            </mat-menu>
+            <p class="board-desc">{{ board.description || 'No description provided for this board.' }}</p>
+            <div class="board-footer">
+              <span class="board-badge" [class.closed]="board.isClosed">
+                 <mat-icon>{{ board.isClosed ? 'lock' : 'check_circle' }}</mat-icon>
+                 {{ board.isClosed ? 'Closed' : 'Active' }}
+              </span>
+              <span class="board-members"><mat-icon>group</mat-icon> {{ board.memberCount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty boards -->
+      <div *ngIf="boards.length === 0 && !showCreateBoard" class="empty-state">
+        <mat-icon class="empty-icon-large">dashboard</mat-icon>
+        <h3>No boards yet</h3>
+        <p>Create your first board to start managing tasks with your team.</p>
+        <button mat-flat-button class="btn btn-primary" (click)="showCreateBoard = true">
+          <mat-icon>add</mat-icon>
+          Create board
+        </button>
+      </div>
+    </ng-container>
+
+    <!-- MEMBERS TAB -->
+    <ng-container *ngIf="!loading && activeTab === 'members'">
+      
+      <div class="members-layout">
+        <div class="members-sidebar">
+          <div class="section-card">
+            <h3>Invite Member</h3>
+            <p class="section-desc">Add collaborators to this workspace.</p>
+            
+            <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" class="invite-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email address</mat-label>
+                <input matInput formControlName="email" placeholder="colleague&#64;example.com" />
+                <mat-icon matPrefix>mail</mat-icon>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Role</mat-label>
+                <mat-select formControlName="role">
+                  <mat-option value="MEMBER">Member</mat-option>
+                  <mat-option *ngIf="isWorkspaceAdmin()" value="ADMIN">Admin</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>verified_user</mat-icon>
+              </mat-form-field>
+
+              <button mat-flat-button class="btn btn-primary invite-btn" [disabled]="inviting || inviteForm.invalid">
+                <mat-spinner *ngIf="inviting" diameter="18"></mat-spinner>
+                {{ inviting ? 'Sending...' : 'Send Invitation' }}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="members-main">
+          <!-- Active Members -->
+          <div class="section-glass">
+            <h3 class="section-title">Active Members ({{ workspace?.members?.length }})</h3>
+            <div class="member-list">
+              <div *ngFor="let member of workspace?.members" class="member-item">
+                <div class="member-avatar" 
+                     [style.background]="getMemberAvatarUrl(member.user?.avatarUrl) ? 'url(' + getMemberAvatarUrl(member.user?.avatarUrl) + ') center/cover' : 'hsl(' + (member.userId * 67 % 360) + ',60%,50%)'">
+                  {{ getMemberAvatarUrl(member.user?.avatarUrl) ? '' : (member.user?.fullName ? member.user!.fullName[0] : member.userId) }}
+                </div>
+                <div class="member-info">
+                  <p class="member-name">{{ member.user?.fullName || ('User #' + member.userId) }}</p>
+                  <span class="member-role" [class.owner]="member.userId === workspace?.ownerId">
+                    {{ member.userId === workspace?.ownerId ? 'OWNER' : member.role }}
+                  </span>
+                </div>
+                <button mat-icon-button *ngIf="canManageMember(member)"
+                        [matMenuTriggerFor]="memberMenu" class="member-menu-btn">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #memberMenu="matMenu" class="modern-menu">
+                  <button mat-menu-item *ngIf="member.role === 'MEMBER'" (click)="updateMemberRole(member.userId, 'ADMIN')">
+                    <mat-icon>admin_panel_settings</mat-icon> Make admin
+                  </button>
+                  <button mat-menu-item *ngIf="member.role === 'ADMIN'" (click)="updateMemberRole(member.userId, 'MEMBER')">
+                    <mat-icon>person</mat-icon> Make member
+                  </button>
+                  <button mat-menu-item class="delete-item" (click)="removeMember(member.userId)">
+                    <mat-icon>person_remove</mat-icon> Remove from workspace
+                  </button>
+                </mat-menu>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Invitations -->
+          <div class="section-glass" *ngIf="invitations.length > 0">
+            <h3 class="section-title">Pending Invitations ({{ invitations.length }})</h3>
+            <div class="member-list">
+              <div *ngFor="let invite of invitations" class="member-item invitation">
+                <div class="member-avatar invitation-avatar">
+                   <mat-icon>mail</mat-icon>
+                </div>
+                <div class="member-info">
+                  <p class="member-name">{{ invite.inviteeEmail }}</p>
+                  <span class="member-role">Invited as {{ invite.role }}</span>
+                </div>
+                <button mat-button class="btn btn-danger btn-sm revoke-btn" (click)="revokeInvitation(invite.id)">
+                   Revoke
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- SETTINGS TAB -->
+    <ng-container *ngIf="!loading && activeTab === 'settings' && workspace">
+      
+      <div class="settings-layout">
+        <section class="settings-section">
+          <div class="section-title-row">
+            <mat-icon>visibility</mat-icon>
+            <h3>Workspace Visibility</h3>
+          </div>
+          <p class="section-desc">Who can see and join this workspace. Changing to Public will allow anyone with the link to view the workspace.</p>
+          
+          <div class="visibility-choices">
+            <button mat-stroked-button class="vis-choice"
+                    [class.active]="workspace.visibility === 'PRIVATE'"
+                    (click)="updateWorkspaceVisibility('PRIVATE')">
+              <mat-icon>lock</mat-icon> Private
+            </button>
+            <button mat-stroked-button class="vis-choice"
+                    [class.active]="workspace.visibility === 'PUBLIC'"
+                    (click)="updateWorkspaceVisibility('PUBLIC')">
+              <mat-icon>public</mat-icon> Public
+            </button>
+          </div>
+        </section>
+
+        <section class="settings-section danger-zone">
+          <div class="section-title-row">
+            <mat-icon>delete_forever</mat-icon>
+            <h3>Danger Zone</h3>
+          </div>
+          <p class="section-desc">Once you delete a workspace, there is no going back. Please be certain.</p>
+          
+          <div class="danger-actions">
+            <button mat-flat-button class="btn btn-danger delete-ws-btn" (click)="deleteWorkspace()">
+              Delete This Workspace
+            </button>
+          </div>
+        </section>
+      </div>
+
+    </ng-container>
+
+  </div>
+</div>

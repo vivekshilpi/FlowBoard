@@ -1,0 +1,99 @@
+<section class="fb-dialog" [ngClass]="variantClass" [attr.aria-busy]="processing()">
+  <div class="fb-dialog__surface">
+    <button
+      *ngIf="canDismiss"
+      type="button"
+      class="fb-dialog__close btn btn-ghost btn-icon"
+      aria-label="Close dialog"
+      (click)="close()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+
+    <div class="fb-dialog__header">
+      <div class="fb-dialog__icon" aria-hidden="true">
+        <mat-icon>{{ data.icon }}</mat-icon>
+      </div>
+
+      <div class="fb-dialog__copy">
+        <h2 class="fb-dialog__title">{{ data.title }}</h2>
+        <p *ngIf="data.description" class="fb-dialog__description">{{ data.description }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="data.mode === 'prompt'" class="fb-dialog__body">
+      <label class="fb-dialog__field-label" for="dialog-prompt-input">Value</label>
+
+      <textarea
+        *ngIf="data.multiline; else singleLineInput"
+        #promptInput
+        id="dialog-prompt-input"
+        class="input fb-dialog__input fb-dialog__input--multiline"
+        [formControl]="promptControl"
+        [placeholder]="data.placeholder || ''"
+        [readOnly]="data.readOnly"
+        [attr.aria-invalid]="promptControl.invalid || !!inlineError()"
+        cdkFocusInitial
+      ></textarea>
+
+      <ng-template #singleLineInput>
+        <input
+          #promptInput
+          id="dialog-prompt-input"
+          class="input fb-dialog__input"
+          [type]="data.inputType || 'text'"
+          [formControl]="promptControl"
+          [placeholder]="data.placeholder || ''"
+          [readOnly]="data.readOnly"
+          [attr.aria-invalid]="promptControl.invalid || !!inlineError()"
+          cdkFocusInitial
+        />
+      </ng-template>
+    </div>
+
+    <div *ngIf="(promptControl.invalid && promptControl.touched) || inlineError()" class="fb-dialog__feedback" role="alert">
+      {{ inlineError() || 'This field is required.' }}
+    </div>
+
+    <div class="fb-dialog__actions">
+      <button
+        *ngIf="data.mode !== 'alert'"
+        type="button"
+        [class]="cancelButtonClass"
+        [disabled]="processing()"
+        (click)="close()"
+      >
+        {{ data.cancelText }}
+      </button>
+
+      <button
+        *ngIf="data.mode === 'alert'; else confirmButton"
+        type="button"
+        [class]="confirmButtonClass"
+        cdkFocusInitial
+        (click)="acknowledge()"
+      >
+        <mat-icon *ngIf="data.confirmAction.icon">{{ data.confirmAction.icon }}</mat-icon>
+        {{ data.acknowledgeText || data.confirmText }}
+      </button>
+
+      <ng-template #confirmButton>
+        <button
+          type="button"
+          [class]="confirmButtonClass"
+          [disabled]="processing()"
+          (click)="confirm()"
+        >
+          <mat-progress-spinner
+            *ngIf="processing()"
+            diameter="16"
+            mode="indeterminate"
+            class="fb-dialog__spinner"
+          ></mat-progress-spinner>
+          <mat-icon *ngIf="!processing() && data.confirmAction.icon">{{ data.confirmAction.icon }}</mat-icon>
+          {{ data.confirmText }}
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</section>
